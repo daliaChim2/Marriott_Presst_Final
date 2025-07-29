@@ -1,0 +1,158 @@
+-- base de datos:
+
+--  para poder borrar directo de la base de datsos
+-- SET SQL_SAFE_UPDATES = 0;
+-- DELETE FROM empleados_sistemas;
+-- SET SQL_SAFE_UPDATES = 1;
+
+-- DROP DATABASE IF EXISTS marriott_presstt;
+CREATE DATABASE marriott_presstt;
+USE marriott_presstt;
+
+CREATE TABLE users (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    role ENUM('admin', 'user') NOT NULL,
+    nombre VARCHAR(100) NOT NULL,
+    correo VARCHAR(100) UNIQUE NOT NULL,
+    pregunta_seguridad VARCHAR(255) NOT NULL,
+    respuesta_seguridad VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE empleados (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    nombre VARCHAR(100) NOT NULL,
+    hotel VARCHAR(50) NOT NULL,
+    cargo VARCHAR(50),
+    departamento VARCHAR(50),
+    numero_asociado VARCHAR(50) UNIQUE NOT NULL,
+    enterpasssid VARCHAR(50)
+);
+
+CREATE TABLE tipos_articulo (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    nombre VARCHAR(50) UNIQUE NOT NULL
+);
+
+CREATE TABLE articulos (
+    id VARCHAR(10) PRIMARY KEY,
+    tipo_id INT,
+    marca VARCHAR(50),
+    modelo VARCHAR(50),
+    numero_serie VARCHAR(100) UNIQUE NOT NULL,
+    estado ENUM('disponible', 'ocupado', 'mantenimiento', 'fuera de servicio') DEFAULT 'disponible',
+    hotel VARCHAR(50) NOT NULL,
+    empleado_id INT,
+    costo DECIMAL(10,2) NOT NULL,
+    descripcion TEXT,
+    FOREIGN KEY (tipo_id) REFERENCES tipos_articulo(id),
+    FOREIGN KEY (empleado_id) REFERENCES empleados(id)
+);
+
+CREATE TABLE prestamos (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    folio VARCHAR(20) UNIQUE NOT NULL,
+    empleado_id INT NOT NULL,
+    fecha_prestamo DATE NOT NULL,
+    fecha_devolucion DATE,
+    periodo VARCHAR(50),
+    estado ENUM('activo', 'finalizado', 'cancelado'),
+    renovado BOOLEAN DEFAULT 0,
+    fecha_vencimiento DATE,
+    FOREIGN KEY (empleado_id) REFERENCES empleados(id)
+);
+ALTER TABLE prestamos ADD COLUMN usuario_entrega VARCHAR(50) NOT NULL;
+
+CREATE TABLE resguardos (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    prestamo_id INT,
+    pdf_generado BOOLEAN DEFAULT 0,
+    ruta_pdf VARCHAR(255),
+    FOREIGN KEY (prestamo_id) REFERENCES prestamos(id)
+);
+
+CREATE TABLE historial (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    fecha DATETIME NOT NULL,
+    usuario VARCHAR(50),
+    accion VARCHAR(50),
+    detalle TEXT,
+    tabla_afectada VARCHAR(50)
+);
+
+CREATE TABLE prestamo_articulos (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    prestamo_id INT,
+    articulo_id VARCHAR(10),
+    FOREIGN KEY (prestamo_id) REFERENCES prestamos(id),
+    FOREIGN KEY (articulo_id) REFERENCES articulos(id)
+);
+
+CREATE TABLE impresiones_resguardos (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    resguardo_id INT,
+    fecha_impresion DATETIME DEFAULT CURRENT_TIMESTAMP,
+    usuario VARCHAR(50),
+    FOREIGN KEY (resguardo_id) REFERENCES resguardos(id)
+);
+
+CREATE TABLE IF NOT EXISTS marcas (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    nombre VARCHAR(50) UNIQUE NOT NULL
+);
+
+ALTER TABLE prestamos ADD COLUMN comentarios TEXT NULL;
+
+CREATE TABLE IF NOT EXISTS empleados_sistemas (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    nombre VARCHAR(100) NOT NULL,
+    puesto VARCHAR(50) DEFAULT 'Responsable de sistemas'
+);
+
+-- algunos responsables de ejemplo:
+INSERT INTO empleados_sistemas (nombre, puesto) VALUES
+('Miguel Toledo', 'IT Manager'),
+('Luis Cepeda', 'IT supervisor'),
+('Hector Chan', 'IT supervisor'),
+('Mario Palacios', 'IT assistant'),
+('Francisco Valdez', 'IT assistant'),
+('Dalia Jimena', 'Administrador del sistema');
+
+ALTER TABLE prestamos ADD COLUMN entregado_por_id INT NULL;
+ALTER TABLE prestamos ADD FOREIGN KEY (entregado_por_id) REFERENCES empleados_sistemas(id);
+
+
+-- ------------------------------------
+SELECT * FROM articulos;
+select * from empleados;
+SELECT * FROM historial;
+SELECT * FROM impresiones_resguardos;
+SELECT * FROM prestamo_articulos;
+SELECT * FROM prestamos;
+SELECT * FROM resguardos;
+SELECT * FROM tipos_articulo;
+SELECT * FROM users;
+SELECT * FROM marcas;
+SELECT * FROM empleados_sistemas;
+-- ------------------------------------
+
+-- Usuario admin por default:
+INSERT INTO users 
+(nombre, username, correo, password, pregunta_seguridad, respuesta_seguridad, role)
+VALUES
+(
+  'Administrador del sistema',
+  'admin_D',
+  'admin@ejemplo.com',
+  '$2b$12$..BVv8/GX6ZmUCD3Y1E79uWDTiFTFC8nCXVTozo82ZAIBRy45WkGq',  -- password: Marr_29
+  '¿Color favorito?',
+  '$2b$12$VuZ/5Y4FPM/7qV6kgiUj/.mAiDrHGFkLzV3k3bEuvSiTuLkR4aEkG',  -- respuesta: "rojo"
+  'admin'
+);
+
+-- ----- EXTRAS -------- ---
+-- para poder borrar directo de la base de datsos
+SET SQL_SAFE_UPDATES = 0;
+DELETE FROM tipos_articulo;
+SET SQL_SAFE_UPDATES = 1;
