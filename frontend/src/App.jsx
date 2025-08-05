@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import Layout from "./layout/Layout";
-import Dashboard from "./Pages/Dashboard";
+// import Dashboard from "./Pages/Dashboard";
 import Colaboradores from "./Pages/Colaboradores";
 import Equipos from "./Pages/Equipos";
 import Sistemas from "./Pages/Sistemas";
@@ -11,7 +11,7 @@ import Login from "./Pages/Auth/Login";
 import Register from "./Pages/Auth/Register";
 
 import PrivateRoute from "./components/PrivateRoute";
-import PublicRoute from "./components/PublicRoute"; // <-- NUEVO
+import PublicRoute from "./components/PublicRoute"; 
 
 export default function App() {
   return (
@@ -30,8 +30,8 @@ export default function App() {
 
       {/* RUTAS PRIVADAS */}
       <Route element={<PrivateRoute><Layout /></PrivateRoute>}>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/" element={<Colaboradores />} />
+        {/* <Route path="/dashboard" element={<Dashboard />} /> */}
         <Route path="/colaboradores" element={<Colaboradores />} />
         <Route path="/equipos" element={<Equipos />} />
         <Route path="/sistemas" element={<Sistemas />} />
@@ -39,7 +39,7 @@ export default function App() {
         <Route path="/prueba-conexion" element={<PruebaConexion />} />
       </Route>
 
-      {/* RUTA DESCONOCIDA */}
+      {/* RUTA DESCONOCIDA  pruebas quitarluego si es necesario*/}
       <Route path="*" element={<Navigate to="/login" />} />
     </Routes>
   );

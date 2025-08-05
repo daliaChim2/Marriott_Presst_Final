@@ -27,7 +27,7 @@ export default function Sidebar() {
 
   return (
     <>
-      <aside className={`bg-rose-300 text-pink-900 h-screen fixed left-0 top-0 z-40 shadow-lg transition-all duration-300 ${isOpen ? "w-64" : "w-20"}`}>
+      <aside className={`bg-stone-100 text-pink-900 h-screen fixed left-0 top-0 z-40 shadow-lg transition-all duration-300 ${isOpen ? "w-20" : "w-20"}`}>
         {/* LOGO */}
         <div className={`flex items-center ${isOpen ? "justify-start pl-4" : "justify-center"}`}>
           {isOpen ? (
@@ -38,22 +38,22 @@ export default function Sidebar() {
         </div>
 
         {/* NAVEGACIÓN */}
-        <nav className="flex flex-col py-4 px-2 space-y-1">
-          <NavItem icon={<FaHome />} label="Inicio" isOpen={isOpen} to="/" active={location.pathname === "/"} />
-          <NavItem icon={<FaUser />} label="Colaboradores" isOpen={isOpen} to="/colaboradores" active={location.pathname.includes("colaboradores")} />
-          <NavItem icon={<FaLaptop />} label="Equipos" isOpen={isOpen} to="/equipos" active={location.pathname.includes("equipos")} />
-          <NavItem icon={<FaKey />} label="Prestamos" isOpen={isOpen} to="/sistemas" active={location.pathname.includes("sistemas")} />
-          <NavItem icon={<FaFileAlt />} label="Resguardos" isOpen={isOpen} to="/resguardos" active={location.pathname.includes("resguardos")} />
+        <nav className="flex flex-col py-4 px-4 space-y-2">
+         
+          <NavItem icon={<FaUser />}  isOpen={isOpen} to="/colaboradores" active={location.pathname.includes("colaboradores")} />
+          <NavItem icon={<FaLaptop />}  isOpen={isOpen} to="/equipos" active={location.pathname.includes("equipos")} />
+          <NavItem icon={<FaKey />}  isOpen={isOpen} to="/sistemas" active={location.pathname.includes("sistemas")} />
+          <NavItem icon={<FaFileAlt />}  isOpen={isOpen} to="/resguardos" active={location.pathname.includes("resguardos")} />
         </nav>
 
-        {/* CONFIGURACIÓN Y CERRAR SESIÓN */}
+        {/* CERRAR SESIÓN */}
         <div className="absolute bottom-0 w-full px-2 py-4 border-t border-rose-800 space-y-1">
           <button
             onClick={() => setShowLogoutModal(true)}
             className="flex items-center gap-3 px-4 py-2 rounded-md transition hover:text-pink-500 text-red-900 w-full"
           >
             <span className="text-lg"><FaPowerOff /></span>
-            {isOpen && <span>Cerrar sesión</span>}
+            {isOpen && <span></span>}
           </button>
         </div>
       </aside>
@@ -83,7 +83,7 @@ function NavItem({ icon, label, isOpen, to, active }) {
   return (
     <Link
       to={to}
-      className={`flex items-center gap-3 px-4 py-2 rounded-md transition ${active ? "bg-rose-600 text-white font-semibold" : "hover:bg-red-500 hover:text-pink-100"}`}
+      className={`flex items-center gap-1 px-1 py-3 rounded-md transition ${active ? "bg-stone-400 text-white font-semibold" : "hover:bg-red-500 hover:text-pink-100"}`}
     >
       <span className="text-lg">{icon}</span>
       {isOpen && <span>{label}</span>}

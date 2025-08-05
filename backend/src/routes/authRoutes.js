@@ -7,3 +7,4 @@ router.post('/register', auth.register);
 router.post('/recuperar-password', auth.recuperarPassword);
 
 module.exports = router;
+

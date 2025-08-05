@@ -65,7 +65,7 @@ export default function Login() {
           href="/recuperar"
           className="text-rose-400 hover:text-rose-500 hover:underline text-sm"
         >
-          ¿Olvidaste tu contraseña?
+          
         </a>
       </div>
     </AuthLayout>

@@ -33,13 +33,26 @@ exports.create = (req, res) => {
   );
 };
 
-// Editar artículo (NO permite cambiar número de serie ni costo ni ID)
+// Editar artículo (solo permite modificar nombre/id, estado, hotel, costo y descripcion)
 exports.update = (req, res) => {
-  const { tipo_id, marca, modelo, estado, hotel, empleado_id, descripcion } = req.body;
   const { id } = req.params;
+  // Solo los campos permitidos:
+  const camposPermitidos = ["id", "estado", "hotel", "costo", "descripcion"];
+  const updates = [];
+  const valores = [];
+  for (const campo of camposPermitidos) {
+    if (req.body[campo] !== undefined) {
+      updates.push(`${campo}=?`);
+      valores.push(req.body[campo]);
+    }
+  }
+  if (updates.length === 0) {
+    return res.status(400).json({ error: 'No hay campos válidos para actualizar.' });
+  }
+  valores.push(id);
   db.query(
-    'UPDATE articulos SET tipo_id=?, marca=?, modelo=?, estado=?, hotel=?, empleado_id=?, descripcion=? WHERE id=?',
-    [tipo_id, marca.trim(), modelo.trim(), estado, hotel, empleado_id || null, descripcion || null, id],
+    `UPDATE articulos SET ${updates.join(', ')} WHERE id=?`,
+    valores,
     (err) => {
       if (err) return res.status(500).json({ error: 'Error al actualizar artículo' });
       res.json({ id, ...req.body });

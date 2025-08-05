@@ -106,7 +106,7 @@ export default function Register() {
           href="/login"
           className="text-rose-400 hover:text-rose-500 hover:underline text-sm"
         >
-          ¿Ya tienes cuenta? Inicia sesión
+          
         </a>
       </div>
     </AuthLayout>

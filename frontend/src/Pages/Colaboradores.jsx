@@ -6,13 +6,17 @@ export default function Colaboradores() {
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({ nombre: "", hotel: "", cargo: "", departamento: "", numero_asociado: "", enterpasssid: "" });
   const [editId, setEditId] = useState(null);
+  const [showForm, setShowForm] = useState(false);
   const [busqueda, setBusqueda] = useState({ nombre: "", hotel: "", numero_asociado: "" });
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState(""); // NUEVO
 
   useEffect(() => { fetchEmpleados(); }, []);
 
   const fetchEmpleados = async () => {
     setLoading(true);
+    setError("");
+    setSuccess("");
     try {
       const res = await axios.get("http://localhost:3000/api/empleados");
       setEmpleados(res.data);
@@ -22,54 +26,161 @@ export default function Colaboradores() {
     setLoading(false);
   };
 
-  const handleInput = e => setForm({ ...form, [e.target.name]: e.target.value });
-  const handleBusqueda = e => setBusqueda({ ...busqueda, [e.target.name]: e.target.value });
-
-  const handleSubmit = async e => {
-    e.preventDefault();
-    setError("");
-    try {
-      if (editId) {
-        await axios.put(`http://localhost:3000/api/empleados/${editId}`, form);
-      } else {
-        await axios.post("http://localhost:3000/api/empleados", form);
-      }
-      setForm({ nombre: "", hotel: "", cargo: "", departamento: "", numero_asociado: "", enterpasssid: "" });
-      setEditId(null);
-      fetchEmpleados();
-    } catch (e) {
-      setError(e?.response?.data?.error || "Error en el registro/edición");
-    }
-  };
-
-  const handleEdit = emp => {
-    setForm(emp);
-    setEditId(emp.id);
-    setError("");
-  };
-
-  const handleDelete = async id => {
-    if (window.confirm("¿Eliminar este empleado?")) {
-      try {
-        await axios.delete(`http://localhost:3000/api/empleados/${id}`);
-        fetchEmpleados();
-      } catch {
-        setError("No se pudo eliminar (quizá está ligado a un artículo o préstamo)");
-      }
-    }
-  };
-
-  // Filtro múltiple por nombre, hotel, número asociado
   const empleadosFiltrados = empleados.filter(emp =>
     emp.nombre.toLowerCase().includes(busqueda.nombre.toLowerCase()) &&
     emp.hotel.toLowerCase().includes(busqueda.hotel.toLowerCase()) &&
     emp.numero_asociado.toLowerCase().includes(busqueda.numero_asociado.toLowerCase())
   );
 
+  const handleBusqueda = e => setBusqueda({ ...busqueda, [e.target.name]: e.target.value });
+  const handleInput = e => setForm({ ...form, [e.target.name]: e.target.value });
+
+  const handleEdit = emp => {
+    setForm({
+      nombre: emp.nombre,
+      hotel: emp.hotel,
+      cargo: emp.cargo || "",
+      departamento: emp.departamento || "",
+      numero_asociado: emp.numero_asociado,
+      enterpasssid: emp.enterpasssid || "",
+    });
+    setEditId(emp.id);
+    setShowForm(true);
+    setError("");
+    setSuccess("");
+  };
+
+  const handleDelete = async id => {
+    if (window.confirm("¿Eliminar este empleado?")) {
+      try {
+        await axios.delete(`http://localhost:3000/api/empleados/${id}`);
+        setSuccess("¡Empleado eliminado correctamente!");
+        setError("");
+        fetchEmpleados();
+        setTimeout(() => setSuccess(""), 2500);
+      } catch {
+        setError("No se pudo eliminar (quizá está ligado a un artículo o préstamo)");
+        setSuccess("");
+      }
+    }
+  };
+
+  const handleSubmit = async e => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+    try {
+      if (editId) {
+        await axios.put(`http://localhost:3000/api/empleados/${editId}`, form);
+        setSuccess("¡Colaborador actualizado!");
+      } else {
+        await axios.post("http://localhost:3000/api/empleados", form);
+        setSuccess("¡Colaborador agregado correctamente!");
+      }
+      setForm({ nombre: "", hotel: "", cargo: "", departamento: "", numero_asociado: "", enterpasssid: "" });
+      setEditId(null);
+      setShowForm(false);
+      fetchEmpleados();
+      setTimeout(() => setSuccess(""), 2500);
+    } catch (e) {
+      setError(e?.response?.data?.error || "Error en el registro/edición");
+      setSuccess("");
+    }
+  };
+
+  const handleShowAddForm = () => {
+    setForm({ nombre: "", hotel: "", cargo: "", departamento: "", numero_asociado: "", enterpasssid: "" });
+    setEditId(null);
+    setShowForm(true);
+    setError("");
+    setSuccess("");
+  };
+
+  const handleCancel = () => {
+    setForm({ nombre: "", hotel: "", cargo: "", departamento: "", numero_asociado: "", enterpasssid: "" });
+    setEditId(null);
+    setShowForm(false);
+    setError("");
+    setSuccess("");
+  };
+
   return (
-    <div className="max-w-5xl mx-auto mt-8 px-4">
+    <div className="max-w-6xl mx-auto mt-8 px-4">
       <h2 className="text-3xl font-bold text-gray-900 mb-6">Colaboradores / Empleados</h2>
-      {/* Filtros */}
+
+      {/* NOTIFICACIONES */}
+      {success && (
+        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-2 rounded mb-4 animate-fadein">
+          {success}
+        </div>
+      )}
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded mb-4 animate-fadein">
+          {error}
+        </div>
+      )}
+
+ 
+
+      {!showForm && (
+        <button
+          onClick={handleShowAddForm}
+          className="bg-rose-400 hover:bg-rose-500 text-white px-4 py-2 mb-5 rounded-2xl shadow font-semibold"
+        >
+          Agregar colaborador
+        </button>
+      )}
+
+      {showForm && (
+        <form onSubmit={handleSubmit} className="mb-8 flex flex-wrap gap-3 items-end bg-gray-50 p-4 rounded-2xl shadow">
+          {/* ... [campos como antes] ... */}
+          <div className="flex flex-col">
+            <label className="text-xs text-gray-500 mb-1">Nombre completo</label>
+            <input name="nombre" value={form.nombre} onChange={handleInput} required placeholder="Nombre completo"
+              className="border border-gray-300 rounded-xl px-3 py-2 focus:outline-none focus:border-rose-400" />
+          </div>
+          <div className="flex flex-col">
+            <label className="text-xs text-gray-500 mb-1">Hotel</label>
+            <select name="hotel" value={form.hotel} onChange={handleInput} required
+              className="border border-gray-300 rounded-xl px-3 py-2 focus:outline-none focus:border-rose-400 bg-white">
+              <option value="">Selecciona hotel...</option>
+              <option value="JW Marriott">JW Marriott</option>
+              <option value="Marriott Resort">Marriott Resort</option>
+            </select>
+          </div>
+          <div className="flex flex-col">
+            <label className="text-xs text-gray-500 mb-1">Cargo/Puesto</label>
+            <input name="cargo" value={form.cargo} onChange={handleInput} required placeholder="Cargo/Puesto"
+              className="border border-gray-300 rounded-xl px-3 py-2 focus:outline-none focus:border-rose-400" />
+          </div>
+          <div className="flex flex-col">
+            <label className="text-xs text-gray-500 mb-1">Departamento</label>
+            <input name="departamento" value={form.departamento} onChange={handleInput} required placeholder="Departamento"
+              className="border border-gray-300 rounded-xl px-3 py-2 focus:outline-none focus:border-rose-400" />
+          </div>
+          <div className="flex flex-col">
+            <label className="text-xs text-gray-500 mb-1"># Asociado</label>
+            <input name="numero_asociado" value={form.numero_asociado} onChange={handleInput} required placeholder="# Asociado"
+              className="border border-gray-300 rounded-xl px-3 py-2 focus:outline-none focus:border-rose-400" />
+          </div>
+          <div className="flex flex-col">
+            <label className="text-xs text-gray-500 mb-1">Enterpass SID</label>
+            <input name="enterpasssid" value={form.enterpasssid} onChange={handleInput} placeholder="Enterpass SID"
+              className="border border-gray-300 rounded-xl px-3 py-2 focus:outline-none focus:border-rose-400" />
+          </div>
+          <button type="submit"
+            className="bg-rose-400 hover:bg-rose-500 text-white px-4 py-2 rounded-2xl shadow transition font-semibold">
+            {editId ? "Actualizar" : "Agregar"}
+          </button>
+          <button type="button"
+            onClick={handleCancel}
+            className="bg-gray-300 hover:bg-gray-400 px-3 py-2 rounded-2xl shadow transition text-gray-800 font-semibold">
+            Cancelar
+          </button>
+        </form>
+      )}
+
+           {/* Filtros live search */}
       <div className="flex flex-wrap gap-2 mb-6">
         <input name="nombre" value={busqueda.nombre} onChange={handleBusqueda}
           placeholder="Buscar por nombre"
@@ -84,63 +195,11 @@ export default function Colaboradores() {
           <option value="JW Marriott">JW Marriott</option>
           <option value="Marriott Resort">Marriott Resort</option>
         </select>
-
         <input name="numero_asociado" value={busqueda.numero_asociado} onChange={handleBusqueda}
           placeholder="Filtrar por # asociado"
           className="border border-gray-300 rounded-xl px-3 py-2 focus:outline-none focus:border-rose-400 transition" />
       </div>
-      {/* Formulario */}
-      <form onSubmit={handleSubmit} className="mb-8 flex flex-wrap gap-3 items-end bg-gray-50 p-4 rounded-2xl shadow">
-        <div className="flex flex-col">
-          <label className="text-xs text-gray-500 mb-1">Nombre completo</label>
-          <input name="nombre" value={form.nombre} onChange={handleInput} required placeholder="Nombre completo"
-            className="border border-gray-300 rounded-xl px-3 py-2 focus:outline-none focus:border-rose-400" />
-        </div>
-        <div className="flex flex-col">
-          <label className="text-xs text-gray-500 mb-1">Hotel</label>
-          <select
-            name="hotel"
-            value={form.hotel}
-            onChange={handleInput}
-            required
-            className="border border-gray-300 rounded-xl px-3 py-2 focus:outline-none focus:border-rose-400 bg-white"
-          >
-            <option value="">Selecciona un hotel...</option>
-            <option value="JW Marriott">JW Marriott</option>
-            <option value="Marriott Resort">Marriott Resort</option>
-          </select>
-        </div>
-        <div className="flex flex-col">
-          <label className="text-xs text-gray-500 mb-1">Cargo/Puesto</label>
-          <input name="cargo" value={form.cargo} onChange={handleInput} required placeholder="Cargo/Puesto"
-            className="border border-gray-300 rounded-xl px-3 py-2 focus:outline-none focus:border-rose-400" />
-        </div>
-        <div className="flex flex-col">
-          <label className="text-xs text-gray-500 mb-1">Departamento</label>
-          <input name="departamento" value={form.departamento} onChange={handleInput} required placeholder="Departamento"
-            className="border border-gray-300 rounded-xl px-3 py-2 focus:outline-none focus:border-rose-400" />
-        </div>
-        <div className="flex flex-col">
-          <label className="text-xs text-gray-500 mb-1"># Asociado</label>
-          <input name="numero_asociado" value={form.numero_asociado} onChange={handleInput} required placeholder="# Asociado"
-            className="border border-gray-300 rounded-xl px-3 py-2 focus:outline-none focus:border-rose-400" />
-        </div>
-        <div className="flex flex-col">
-          <label className="text-xs text-gray-500 mb-1">Enterpass SID</label>
-          <input name="enterpasssid" value={form.enterpasssid} onChange={handleInput} placeholder="Enterpass SID"
-            className="border border-gray-300 rounded-xl px-3 py-2 focus:outline-none focus:border-rose-400" />
-        </div>
-        <button type="submit"
-          className="bg-rose-400 hover:bg-rose-500 text-white px-4 py-2 rounded-2xl shadow transition font-semibold">
-          {editId ? "Actualizar" : "Agregar"}
-        </button>
-        {editId && <button type="button"
-          onClick={() => { setEditId(null); setForm({ nombre: "", hotel: "", cargo: "", departamento: "", numero_asociado: "", enterpasssid: "" }); }}
-          className="bg-gray-300 hover:bg-gray-400 px-3 py-2 rounded-2xl shadow transition text-gray-800 font-semibold">
-          Cancelar
-        </button>}
-      </form>
-      {error && <div className="text-red-600 mb-4">{error}</div>}
+
       {loading ? (
         <p className="text-gray-500">Cargando...</p>
       ) : (

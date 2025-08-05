@@ -20,7 +20,7 @@ exports.getAll = (req, res) => {
   });
 };
 
-// Crear nuevo préstamo con folio autogenerado y comentarios y fecha automática para permanentes
+// Crear nuevo préstamo con snapshot para PDF seguro
 exports.create = (req, res) => {
   console.log("REQ BODY:", req.body);
   const { empleado_id, usuario_entrega, fecha_prestamo, fecha_vencimiento, periodo, comentarios, articulos } = req.body;
@@ -33,7 +33,7 @@ exports.create = (req, res) => {
   if (periodo === "permanente") {
     const d = new Date(fecha_prestamo);
     d.setFullYear(d.getFullYear() + 1);
-    fechaVencimientoFinal = d.toISOString().slice(0,10);
+    fechaVencimientoFinal = d.toISOString().slice(0, 10);
   }
 
   // 1. Buscar el hotel del empleado
@@ -81,8 +81,60 @@ exports.create = (req, res) => {
             );
             Promise.all(queries)
               .then(() => {
-                // --- AVISO DE ÉXITO ---
-                res.status(201).json({ message: 'Préstamo registrado correctamente.', prestamoId, folio });
+                // --- SNAPSHOT del resguardo al crear préstamo ---
+                db.query(
+                  `
+                  SELECT 
+                    p.id AS prestamo_id, p.folio, p.fecha_prestamo, p.fecha_vencimiento, p.periodo, p.comentarios,
+                    e.nombre AS empleado_nombre, e.cargo AS empleado_cargo, e.departamento AS empleado_departamento, 
+                    e.numero_asociado AS empleado_numero_asociado, e.hotel AS empleado_hotel,
+                    p.usuario_entrega AS responsable_nombre,
+                    'Responsable de sistemas' AS responsable_puesto
+                  FROM prestamos p
+                  LEFT JOIN empleados e ON p.empleado_id = e.id
+                  WHERE p.id = ?
+                  `,
+                  [prestamoId],
+                  (err, snapshotDataArr) => {
+                    if (err || !snapshotDataArr.length) {
+                      // Ignora error: sigue el flujo pero loguea
+                      console.error("No se pudo crear snapshot del préstamo:", err);
+                      res.status(201).json({ message: 'Préstamo registrado correctamente.', prestamoId, folio });
+                    } else {
+                      const snapshot = snapshotDataArr[0];
+                      // Buscar los artículos
+                      db.query(
+                        `SELECT a.id, t.nombre as tipo, a.marca, a.modelo, a.numero_serie, a.descripcion, a.costo 
+                        FROM prestamo_articulos pa 
+                        JOIN articulos a ON pa.articulo_id = a.id
+                        JOIN tipos_articulo t ON a.tipo_id = t.id
+                        WHERE pa.prestamo_id = ?`,
+                        [prestamoId],
+                        (err2, articulos) => {
+                          const articulos_json = JSON.stringify(articulos || []);
+                          db.query(
+                            `INSERT INTO resguardo_snapshots 
+                            (prestamo_id, empleado_nombre, empleado_cargo, empleado_departamento, empleado_numero_asociado, empleado_hotel, responsable_nombre, responsable_puesto, articulos_json, fecha_prestamo, fecha_vencimiento, periodo, comentarios, folio)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                            [
+                              prestamoId, snapshot.empleado_nombre, snapshot.empleado_cargo, snapshot.empleado_departamento,
+                              snapshot.empleado_numero_asociado, snapshot.empleado_hotel, snapshot.responsable_nombre,
+                              snapshot.responsable_puesto, articulos_json, snapshot.fecha_prestamo, snapshot.fecha_vencimiento,
+                              snapshot.periodo, snapshot.comentarios, snapshot.folio
+                            ],
+                            (err3) => {
+                              if (err3) {
+                                // Si falla snapshot, igual registramos el préstamo
+                                console.error("No se guardó snapshot del resguardo:", err3);
+                              }
+                              res.status(201).json({ message: 'Préstamo registrado correctamente.', prestamoId, folio });
+                            }
+                          );
+                        }
+                      );
+                    }
+                  }
+                );
               })
               .catch(e => res.status(500).json({ error: 'Error al relacionar artículos' }));
           }

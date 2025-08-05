@@ -2,26 +2,25 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('../config/db');
 
-// Login de usuario
+// ==== LOGIN DE USUARIO ====
 const login = async (req, res) => {
   const { username, password } = req.body;
-
   db.query('SELECT * FROM users WHERE username = ?', [username], async (err, results) => {
     if (err) return res.status(500).json({ error: 'Error al buscar el usuario.' });
-
     if (results.length === 0) return res.status(404).json({ error: 'Usuario no encontrado.' });
 
     const user = results[0];
     const valid = await bcrypt.compare(password, user.password);
-
     if (!valid) return res.status(401).json({ error: 'Contraseña incorrecta.' });
 
+    // CREAR JWT TOKEN
     const token = jwt.sign(
       { id: user.id, username: user.username, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: '8h' }
     );
 
+    // RESPONDER con token y datos
     return res.status(200).json({
       message: 'Login exitoso',
       token,
@@ -36,7 +35,7 @@ const login = async (req, res) => {
   });
 };
 
-// Registro de usuario
+// ==== REGISTRO DE USUARIO ====
 const register = async (req, res) => {
   const { nombre, username, correo, password, pregunta_seguridad, respuesta_seguridad, role, adminUser } = req.body;
 
@@ -44,19 +43,21 @@ const register = async (req, res) => {
     return res.status(400).json({ error: 'Faltan datos obligatorios.' });
   }
 
-  // Solo admin_D puede crear otros admin
+  // SOLO admin_D puede crear otros admin
   if (role === 'admin' && adminUser !== 'admin_D') {
     return res.status(403).json({ error: 'Solo admin_D puede crear administradores.' });
   }
 
-  // Checar si usuario/correo ya existen
+  // VERIFICAR SI USUARIO o CORREO YA EXISTE
   db.query('SELECT * FROM users WHERE username = ? OR correo = ?', [username, correo], async (err, results) => {
     if (err) return res.status(500).json({ error: 'Error al buscar el usuario.' });
     if (results.length > 0) return res.status(409).json({ error: 'Usuario o correo ya registrado.' });
 
+    // HASH DE CONTRASEÑA Y RESPUESTA
     const hashedPassword = await bcrypt.hash(password, 10);
-    const hashedRespuesta = await bcrypt.hash(respuesta_seguridad, 10); // Hash también la respuesta
+    const hashedRespuesta = await bcrypt.hash(respuesta_seguridad, 10);
 
+    // INSERTAR NUEVO USUARIO
     db.query(
       'INSERT INTO users (nombre, username, correo, password, pregunta_seguridad, respuesta_seguridad, role) VALUES (?, ?, ?, ?, ?, ?, ?)',
       [nombre, username, correo, hashedPassword, pregunta_seguridad, hashedRespuesta, role || 'user'],
@@ -68,7 +69,7 @@ const register = async (req, res) => {
   });
 };
 
-// Recuperación de contraseña con pregunta de seguridad
+// ==== RECUPERAR CONTRASEÑA ====
 const recuperarPassword = async (req, res) => {
   const { username, pregunta_seguridad, respuesta_seguridad, nuevaPassword } = req.body;
   if (!username || !pregunta_seguridad || !respuesta_seguridad || !nuevaPassword) {
@@ -80,17 +81,15 @@ const recuperarPassword = async (req, res) => {
     if (results.length === 0) return res.status(404).json({ error: 'Usuario no encontrado.' });
 
     const user = results[0];
-
-    // Validar pregunta
     if (user.pregunta_seguridad !== pregunta_seguridad)
       return res.status(401).json({ error: 'Pregunta de seguridad incorrecta.' });
 
-    // Validar respuesta (comparar hash)
+    // VALIDAR RESPUESTA (hash)
     const validRespuesta = await bcrypt.compare(respuesta_seguridad, user.respuesta_seguridad);
     if (!validRespuesta)
       return res.status(401).json({ error: 'Respuesta de seguridad incorrecta.' });
 
-    // Cambiar contraseña
+    // CAMBIAR CONTRASEÑA
     const hashedPassword = await bcrypt.hash(nuevaPassword, 10);
     db.query(
       'UPDATE users SET password = ? WHERE username = ?',

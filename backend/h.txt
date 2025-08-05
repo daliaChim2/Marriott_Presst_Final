@@ -1,9 +1,9 @@
--- base de datos:
 
---  para poder borrar directo de la base de datsos
--- SET SQL_SAFE_UPDATES = 0;
--- DELETE FROM empleados_sistemas;
--- SET SQL_SAFE_UPDATES = 1;
+-- ----- EXTRAS -------- ---
+-- para poder borrar directo de la base de datsos
+SET SQL_SAFE_UPDATES = 0;
+DELETE FROM resguardo_snapshot;
+SET SQL_SAFE_UPDATES = 1;
 
 -- DROP DATABASE IF EXISTS marriott_presstt;
 CREATE DATABASE marriott_presstt;
@@ -122,6 +122,26 @@ INSERT INTO empleados_sistemas (nombre, puesto) VALUES
 ALTER TABLE prestamos ADD COLUMN entregado_por_id INT NULL;
 ALTER TABLE prestamos ADD FOREIGN KEY (entregado_por_id) REFERENCES empleados_sistemas(id);
 
+CREATE TABLE IF NOT EXISTS resguardo_snapshots (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    prestamo_id INT NOT NULL,
+    empleado_nombre VARCHAR(100),
+    empleado_cargo VARCHAR(100),
+    empleado_departamento VARCHAR(100),
+    empleado_numero_asociado VARCHAR(50),
+    empleado_hotel VARCHAR(50),
+    responsable_nombre VARCHAR(100),
+    responsable_puesto VARCHAR(100),
+    articulos_json TEXT, -- Aquí guardamos array con datos completos del artículo
+    fecha_prestamo DATE,
+    fecha_vencimiento DATE,
+    periodo VARCHAR(50),
+    comentarios TEXT,
+    folio VARCHAR(30),
+    creado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (prestamo_id) REFERENCES prestamos(id)
+);
+
 
 -- ------------------------------------
 SELECT * FROM articulos;
@@ -151,8 +171,3 @@ VALUES
   'admin'
 );
 
--- ----- EXTRAS -------- ---
--- para poder borrar directo de la base de datsos
-SET SQL_SAFE_UPDATES = 0;
-DELETE FROM tipos_articulo;
-SET SQL_SAFE_UPDATES = 1;

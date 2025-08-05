@@ -1,6 +1,5 @@
 import React from "react";
 import Sidebar from "../components/layout/Sidebar";
-import Header from "../components/layout/Header";
 import { Outlet } from "react-router-dom";
 
 const Layout = () => {
@@ -8,10 +7,9 @@ const Layout = () => {
     <div className="flex h-screen">
       <Sidebar />
 
-      {/* Margen izquierdo solo si pantalla es mediana o más */}
-      <div className="flex-1 flex flex-col overflow-auto bg-gray-100 ml-20 md:ml-64 transition-all duration-300">
-        <Header />
-        <div className="p-2 flex-1 overflow-auto">
+      {/* Cambia el margen izquierdo a 12 (o ajusta el valor a tu gusto, por ejemplo ml-10 para 2.5rem) */}
+      <div className="flex-1 flex flex-col overflow-auto bg-slate-50 ml-12 transition-all duration-300">
+        <div className="p-6 flex-1 overflow-auto">
           <Outlet />
         </div>
       </div>
