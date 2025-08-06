@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 
 export default function Sistemas() {
-  const usuarioLogueado = JSON.parse(localStorage.getItem("user"));
+  const usuarioLogueado = JSON.parse(localStorage.getItem("user") || "{}");
 
   const [empleados, setEmpleados] = useState([]);
   const [articulos, setArticulos] = useState([]);
@@ -117,6 +117,14 @@ export default function Sistemas() {
     setError(""); setSuccess("");
     if (!form.empleado_id || form.articulos.length === 0)
       return setError("Completa todos los campos obligatorios.");
+
+    // Chequeo frontend: No permitir autopréstamo
+    const empleadoSel = empleados.find(e => String(e.id) === String(form.empleado_id));
+    if (empleadoSel && empleadoSel.nombre === usuarioLogueado.nombre) {
+      setError("No puedes auto-prestarte artículos.");
+      return;
+    }
+
     try {
       await axios.post("http://localhost:3000/api/prestamos", {
         ...form,
@@ -159,11 +167,13 @@ export default function Sistemas() {
             className="border border-gray-300 rounded-xl px-3 py-2 w-full bg-white"
           >
             <option value="">Selecciona empleado...</option>
-            {empleados.map(e => (
-              <option key={e.id} value={e.id}>
-                {e.nombre} ({e.numero_asociado}) - {e.hotel}
-              </option>
-            ))}
+            {empleados
+              .filter(e => e.nombre !== usuarioLogueado.nombre) // Oculta al usuario logueado
+              .map(e => (
+                <option key={e.id} value={e.id}>
+                  {e.nombre} ({e.numero_asociado}) - {e.hotel}
+                </option>
+              ))}
           </select>
         </div>
         {/* Artículos con buscador por número de serie */}

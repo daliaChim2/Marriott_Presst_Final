@@ -22,27 +22,45 @@ exports.getAll = (req, res) => {
 
 // Crear nuevo préstamo con snapshot para PDF seguro
 exports.create = (req, res) => {
-  console.log("REQ BODY:", req.body);
-  const { empleado_id, usuario_entrega, fecha_prestamo, fecha_vencimiento, periodo, comentarios, articulos } = req.body;
+  const {
+    empleado_id,
+    usuario_entrega,
+    fecha_prestamo,
+    fecha_vencimiento,
+    periodo,
+    comentarios,
+    articulos
+  } = req.body;
+
   if (!empleado_id || !usuario_entrega || !fecha_prestamo || !periodo || !Array.isArray(articulos) || articulos.length === 0) {
     return res.status(400).json({ error: 'Faltan datos obligatorios' });
   }
 
-  // --- NUEVA LÓGICA para fecha de vencimiento en “permanente” ---
-  let fechaVencimientoFinal = fecha_vencimiento;
-  if (periodo === "permanente") {
-    const d = new Date(fecha_prestamo);
-    d.setFullYear(d.getFullYear() + 1);
-    fechaVencimientoFinal = d.toISOString().slice(0, 10);
-  }
-
-  // 1. Buscar el hotel del empleado
-  db.query('SELECT hotel FROM empleados WHERE id = ?', [empleado_id], (err, empRes) => {
-    if (err || empRes.length === 0) {
-      console.error("ERROR SQL (empleado/hotel):", err);
-      return res.status(500).json({ error: 'Error al buscar hotel del empleado' });
+  // 1. Buscar el empleado para verificar que no sea autopréstamo
+  db.query('SELECT * FROM empleados WHERE id = ?', [empleado_id], (errEmp, empRes) => {
+    if (errEmp || empRes.length === 0) {
+      return res.status(500).json({ error: 'Error al buscar empleado receptor' });
     }
-    const hotel = empRes[0].hotel;
+
+    // Bloquea autopréstamo: Si el nombre del responsable y del empleado receptor coinciden, no se permite
+    const empleado = empRes[0];
+    if (
+      empleado.nombre &&
+      usuario_entrega &&
+      empleado.nombre.trim().toLowerCase() === usuario_entrega.trim().toLowerCase()
+    ) {
+      return res.status(403).json({ error: 'No puedes auto-prestarte artículos.' });
+    }
+
+    // --- NUEVA LÓGICA para fecha de vencimiento en “permanente” ---
+    let fechaVencimientoFinal = fecha_vencimiento;
+    if (periodo === "permanente") {
+      const d = new Date(fecha_prestamo);
+      d.setFullYear(d.getFullYear() + 1);
+      fechaVencimientoFinal = d.toISOString().slice(0, 10);
+    }
+
+    const hotel = empleado.hotel;
     const prefix = hotel === "JW Marriott" ? "JW" : hotel === "Marriott Resort" ? "MR" : "XX";
 
     // 2. Contar préstamos existentes para ese hotel
