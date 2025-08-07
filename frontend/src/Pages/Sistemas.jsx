@@ -178,7 +178,7 @@ export default function Sistemas() {
         </div>
         {/* Artículos con buscador por número de serie */}
         <div>
-          <label className="block text-xs mb-1 text-gray-500">Artículos a prestar (por número de serie, nombre o ID)</label>
+          <label className="block text-xs mb-1 text-gray-500">Artículos a prestar (por número de serie o nombre)</label>
           <input
             value={busquedaSerie}
             onChange={e => setBusquedaSerie(e.target.value)}

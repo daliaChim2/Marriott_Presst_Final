@@ -5,3 +5,4 @@ const controller = require('../controllers/resguardosController');
 router.get('/pdf/:prestamoId', controller.generarPDF);
 
 module.exports = router;
+
