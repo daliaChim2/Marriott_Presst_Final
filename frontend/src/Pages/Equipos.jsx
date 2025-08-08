@@ -25,7 +25,7 @@ function AgregarTipoArticulo({ onAdded, tipos }) {
     <form onSubmit={handleAdd} className="flex gap-2 items-end mb-2">
       <input value={nuevoTipo} onChange={e => setNuevoTipo(e.target.value)} required
         placeholder="Nuevo tipo de artículo" className="border px-2 py-1 rounded" />
-      <button type="submit" className="bg-rose-400 hover:bg-rose-500 text-white px-3 rounded">Agregar</button>
+      <button type="submit" className="bg-rose-900 hover:bg-rose-500 text-white px-3 rounded">Agregar</button>
       {error && <span className="text-red-600 ml-2">{error}</span>}
     </form>
   );
@@ -48,7 +48,7 @@ function AgregarMarca({ onAdded }) {
     <form onSubmit={handleAdd} className="flex gap-2 items-end mb-4">
       <input value={nuevaMarca} onChange={e => setNuevaMarca(e.target.value)} required
         placeholder="Nueva marca" className="border px-2 py-1 rounded" />
-      <button type="submit" className="bg-rose-400 hover:bg-rose-500 text-white px-3 rounded">Agregar</button>
+      <button type="submit" className="bg-rose-900 hover:bg-rose-500 text-white px-3 rounded">Agregar</button>
       {error && <span className="text-red-600 ml-2">{error}</span>}
     </form>
   );
@@ -117,7 +117,7 @@ export default function Equipos() {
     if (editId) {
       if (
         ["id", "estado", "hotel", "costo", "descripcion"].includes(name) ||
-        name === "numero_serie" // Si decides permitir editar número_serie, agrega aquí (pero usualmente no)
+        name === "numero_serie" 
       ) {
         // Para costo, solo si está desbloqueado
         if (name === "costo" && !costoEditable) return;
@@ -220,7 +220,7 @@ export default function Equipos() {
 
   return (
     <div className="max-w-7xl mx-auto mt-8 px-2 sm:px-6 lg:px-8 bg-gray-50 min-h-screen">
-      <h2 className="text-3xl font-bold text-gray-900 mb-6">Equipos / Artículos</h2>
+      <h2 className="text-3xl font-bold text-rose-900 mb-6">Equipos / Artículos</h2>
 
       {/* Marcas y tipos */}
       <AgregarMarca onAdded={fetchAll} />
@@ -271,7 +271,7 @@ export default function Equipos() {
         {/* Botón agregar */}
         <button
           onClick={handleAdd}
-          className="ml-auto bg-rose-400 hover:bg-rose-500 text-white font-semibold px-5 py-2 rounded-2xl shadow transition"
+          className="ml-auto bg-rose-900 hover:bg-rose-500 text-white font-semibold px-5 py-2 rounded-2xl shadow transition"
         >+ Agregar artículo</button>
       </div>
 
@@ -444,11 +444,11 @@ export default function Equipos() {
                   <td className="px-4 py-2">{art.descripcion}</td>
                   <td className="px-4 py-2 flex gap-2">
                     <button onClick={() => handleEdit(art)}
-                      className="text-gray-800 bg-gray-200 hover:bg-gray-400 transition rounded-xl px-2 py-1 font-semibold shadow">
+                      className="text-rose-800 bg-gray-200 hover:text-white hover:bg-gray-500 transition rounded-xl px-2 py-1 font-semibold shadow">
                       Editar
                     </button>
                     <button onClick={() => handleDelete(art.id)}
-                      className="text-white bg-rose-400 hover:bg-rose-600 transition rounded-xl px-2 py-1 font-semibold shadow">
+                      className="text-white bg-rose-900 hover:bg-rose-500 transition rounded-xl px-2 py-1 font-semibold shadow">
                       Eliminar
                     </button>
                   </td>

@@ -40,7 +40,7 @@ export default function Login() {
           placeholder="Usuario"
           value={form.username}
           onChange={handleChange}
-          className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-400 focus:border-rose-400 bg-gray-50 text-gray-900 placeholder-gray-400 transition"
+          className="w-full px-4 py-2 border border-rose-300 rounded-xl focus:ring-2 focus:ring-rose-400 focus:border-rose-400 bg-gray-50 text-gray-900 placeholder-gray-400 transition"
           autoFocus
           required
         />
@@ -50,12 +50,12 @@ export default function Login() {
           placeholder="Contraseña"
           value={form.password}
           onChange={handleChange}
-          className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-400 focus:border-rose-400 bg-gray-50 text-gray-900 placeholder-gray-400 transition"
+          className="w-full px-4 py-2 border border-rose-300 rounded-xl focus:ring-2 focus:ring-rose-400 focus:border-rose-400 bg-gray-50 text-gray-900 placeholder-gray-400 transition"
           required
         />
         <button
           type="submit"
-          className="w-full bg-rose-400 hover:bg-rose-500 text-white py-2 rounded-xl font-semibold shadow transition-all duration-150"
+          className="w-full bg-rose-900 hover:bg-rose-500 text-white py-2 rounded-xl font-semibold shadow transition-all duration-150"
         >
           Ingresar
         </button>

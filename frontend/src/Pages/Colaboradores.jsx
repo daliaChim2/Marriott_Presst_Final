@@ -106,7 +106,7 @@ export default function Colaboradores() {
 
   return (
     <div className="max-w-6xl mx-auto mt-8 px-4">
-      <h2 className="text-3xl font-bold text-gray-900 mb-6">Colaboradores / Empleados</h2>
+      <h2 className="text-3xl font-bold text-rose-900 mb-6">Colaboradores / Empleados</h2>
 
       {/* NOTIFICACIONES */}
       {success && (
@@ -125,7 +125,7 @@ export default function Colaboradores() {
       {!showForm && (
         <button
           onClick={handleShowAddForm}
-          className="bg-rose-400 hover:bg-rose-500 text-white px-4 py-2 mb-5 rounded-2xl shadow font-semibold"
+          className="bg-rose-900 hover:bg-rose-500 text-white px-4 py-2 mb-5 rounded-2xl shadow font-semibold"
         >
           Agregar colaborador
         </button>
@@ -227,11 +227,11 @@ export default function Colaboradores() {
                   <td className="px-4 py-2">{emp.enterpasssid}</td>
                   <td className="px-4 py-2 flex gap-2">
                     <button onClick={() => handleEdit(emp)}
-                      className="text-gray-800 bg-gray-200 hover:bg-gray-400 transition rounded-xl px-2 py-1 font-semibold shadow">
+                      className="text-rose-900 bg-gray-200 hover:bg-gray-400 transition rounded-xl px-2 py-1 font-semibold shadow">
                       Editar
                     </button>
                     <button onClick={() => handleDelete(emp.id)}
-                      className="text-white bg-rose-400 hover:bg-rose-600 transition rounded-xl px-2 py-1 font-semibold shadow">
+                      className="text-white bg-rose-900 hover:bg-rose-600 transition rounded-xl px-2 py-1 font-semibold shadow">
                       Eliminar
                     </button>
                   </td>

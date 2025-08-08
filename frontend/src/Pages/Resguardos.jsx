@@ -92,7 +92,7 @@ export default function Resguardos() {
       };
     }
   };
-
+     //FINALIZAR PRESTAMOS 
   const handleFinalizar = async (prestamoId) => {
     if (
       !window.confirm(
@@ -142,7 +142,7 @@ export default function Resguardos() {
 
   return (
     <div className="max-w-6xl mx-auto mt-8 px-4">
-      <h2 className="text-3xl font-bold text-gray-900 mb-6">
+      <h2 className="text-3xl font-bold text-rose-900 mb-6">
         Préstamos y Resguardos
       </h2>
       {/* --- FILTROS --- */}
@@ -309,26 +309,26 @@ export default function Resguardos() {
                   <td className="px-4 py-2 flex flex-col gap-2 min-w-[140px]">
                     <button
                       onClick={() => handleVerPDF(prest.id)}
-                      className="bg-gray-200 hover:bg-rose-200 text-gray-900 px-3 py-1 rounded-xl shadow font-semibold text-xs"
+                      className="bg-gray-100 hover:bg-rose-400 hover:text-white text-rose-900 px-3 py-2 rounded-xl shadow font-bold text-xs"
                     >
                       Previsualizar PDF
                     </button>
                     <button
                       onClick={() => handleImprimirPDF(prest.id)}
-                      className="bg-rose-400 hover:bg-rose-500 text-white px-3 py-1 rounded-xl shadow font-semibold text-xs"
+                      className="bg-rose-900 hover:bg-rose-500 text-white px-3 py-1 rounded-xl shadow font-semibold text-xs"
                     >
                       Imprimir PDF
                     </button>
                     {prest.estado === "activo" && (
                       <button
                         onClick={() => handleFinalizar(prest.id)}
-                        className="bg-green-500 hover:bg-green-700 text-white px-3 py-1 rounded-xl shadow font-semibold text-xs"
+                        className="bg-red-600 hover:bg-rose-400 text-white px-3 py-1 rounded-xl shadow font-semibold text-xs"
                       >
                         Finalizar préstamo
                       </button>
                     )}
                     {prest.estado !== "activo" && (
-                      <span className="text-xs text-gray-400 mt-2">
+                      <span className="text-s text-center  text-rose-600 mt-2">
                         Finalizado
                       </span>
                     )}

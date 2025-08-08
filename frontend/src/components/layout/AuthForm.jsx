@@ -8,7 +8,7 @@ export default function AuthForm() {
   const [showResetModal, setShowResetModal] = useState(false);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-rose-300 to-pink-900 relative">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-rose-900 to-pink-900 relative">
       {/* Modal Recuperar Contraseña */}
       {showResetModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

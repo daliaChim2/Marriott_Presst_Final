@@ -154,7 +154,7 @@ export default function Sistemas() {
 
   return (
     <div className="max-w-3xl mx-auto mt-8 bg-white p-6 rounded-2xl shadow">
-      <h2 className="text-2xl font-bold mb-4 text-gray-900">Registrar préstamo</h2>
+      <h2 className="text-2xl font-bold mb-4 text-rose-900">Registrar préstamo</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Empleado que recibe */}
         <div>
@@ -237,7 +237,7 @@ export default function Sistemas() {
             onChange={handleChange}
             rows={3}
             placeholder="Detalles físicos, observaciones u otros..."
-            className="border border-rose-200 rounded-2xl px-3 py-2 w-full bg-rose-50 focus:border-rose-400 transition"
+            className="border border-rose-900 rounded-2xl px-3 py-2 w-full bg-rose-50 focus:border-rose-400 transition"
           />
         </div>
         {/* Fechas y periodo */}
@@ -270,7 +270,7 @@ export default function Sistemas() {
         </div>
         {/* Botón */}
         <button type="submit"
-          className="bg-rose-400 hover:bg-rose-500 text-white px-6 py-2 rounded-2xl shadow font-semibold">
+          className="bg-rose-900 hover:bg-rose-500 text-white px-6 py-2 rounded-2xl shadow font-semibold">
           Registrar
         </button>
         {error && <div className="text-red-600">{error}</div>}

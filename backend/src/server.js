@@ -47,6 +47,7 @@ function finalizarPrestamosVencidos() {
       } else {
         console.log(`[CRON FinalizarPréstamos] No hay préstamos vencidos para finalizar hoy (${hoy})`);
       }
+      
     }
   );
 }

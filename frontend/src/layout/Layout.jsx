@@ -7,7 +7,7 @@ const Layout = () => {
     <div className="flex h-screen">
       <Sidebar />
 
-      {/* Cambia el margen izquierdo a 12 (o ajusta el valor a tu gusto, por ejemplo ml-10 para 2.5rem) */}
+      {/* Cambia el margen izquierdo a 12 */}
       <div className="flex-1 flex flex-col overflow-auto bg-slate-50 ml-12 transition-all duration-300">
         <div className="p-6 flex-1 overflow-auto">
           <Outlet />
