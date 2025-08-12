@@ -10,8 +10,7 @@ function AgregarTipoArticulo({ onAdded, tipos }) {
     e.preventDefault();
     if (
       tipos.some(
-        (t) =>
-          t.nombre.trim().toLowerCase() === nuevoTipo.trim().toLowerCase()
+        (t) => t.nombre.trim().toLowerCase() === nuevoTipo.trim().toLowerCase()
       )
     ) {
       setError("Ya existe un tipo de artículo con ese nombre.");
@@ -90,8 +89,13 @@ const toNumber = (v) => {
   const n = parseFloat(v);
   return Number.isNaN(n) ? 0 : n;
 };
-const sortIcon = (active, dir) =>
-  !active ? "↕" : dir === "asc" ? "▲" : "▼";
+const sortIcon = (active, dir) => (!active ? "↕" : dir === "asc" ? "▲" : "▼");
+const mxn = (v) =>
+  typeof v === "number"
+    ? v.toLocaleString("es-MX", { style: "currency", currency: "MXN" })
+    : toNumber(v).toLocaleString("es-MX", { style: "currency", currency: "MXN" });
+
+const LS_KEY = "equipos_ui_state_v1";
 
 /* ============ Componente principal ============ */
 export default function Equipos() {
@@ -142,6 +146,44 @@ export default function Equipos() {
   const [showCostoWarning, setShowCostoWarning] = useState(false);
   const [costoEditable, setCostoEditable] = useState(false);
   const costoInputRef = useRef();
+
+  /* ---- Cargar estado guardado (localStorage) ---- */
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(LS_KEY) || "{}");
+      if (saved.busqueda) setBusqueda(saved.busqueda);
+      if (typeof saved.busquedaGlobalInput === "string")
+        setBusquedaGlobalInput(saved.busquedaGlobalInput);
+      if (typeof saved.busquedaGlobal === "string")
+        setBusquedaGlobal(saved.busquedaGlobal);
+      if (saved.sortBy) setSortBy(saved.sortBy);
+      if (saved.sortDir) setSortDir(saved.sortDir);
+      if (typeof saved.pageSize === "number") setPageSize(saved.pageSize);
+      if (typeof saved.page === "number") setPage(saved.page);
+    } catch {}
+  }, []);
+
+  /* ---- Guardar estado en localStorage ---- */
+  useEffect(() => {
+    const state = {
+      busqueda,
+      busquedaGlobalInput,
+      busquedaGlobal,
+      sortBy,
+      sortDir,
+      pageSize,
+      page,
+    };
+    localStorage.setItem(LS_KEY, JSON.stringify(state));
+  }, [
+    busqueda,
+    busquedaGlobalInput,
+    busquedaGlobal,
+    sortBy,
+    sortDir,
+    pageSize,
+    page,
+  ]);
 
   /* ---- Cargar datos ---- */
   useEffect(() => {
@@ -279,13 +321,16 @@ export default function Equipos() {
   };
 
   /* ---- Filtros específicos ---- */
-  const handleBusqueda = (e) =>
+  const handleBusqueda = (e) => {
     setBusqueda({ ...busqueda, [e.target.name]: e.target.value });
+    setPage(1);
+  };
   const limpiarFiltros = () => {
     setBusqueda({ tipo: "", numero_serie: "", hotel: "" });
     setBusquedaGlobalInput("");
     setBusquedaGlobal("");
     setPage(1);
+    localStorage.removeItem(LS_KEY);
   };
 
   const serieSugeridas = articulos
@@ -396,9 +441,9 @@ export default function Equipos() {
       ? sorted
       : sorted.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
-  const from = pageSize === 0 ? (total === 0 ? 0 : 1) : (currentPage - 1) * pageSize + 1;
-  const to =
-    pageSize === 0 ? total : Math.min(currentPage * pageSize, total);
+  const from =
+    pageSize === 0 ? (total === 0 ? 0 : 1) : (currentPage - 1) * pageSize + 1;
+  const to = pageSize === 0 ? total : Math.min(currentPage * pageSize, total);
 
   const gotoPage = (p) => setPage(Math.min(Math.max(p, 1), pageCount));
 
@@ -605,7 +650,7 @@ export default function Equipos() {
                   </td>
                   <td className="px-4 py-2">{art.hotel}</td>
                   <td className="px-4 py-2">{art.empleado_nombre || "-"}</td>
-                  <td className="px-4 py-2">{art.costo}</td>
+                  <td className="px-4 py-2">{mxn(art.costo)}</td>
                   <td className="px-4 py-2">{art.descripcion}</td>
                   <td className="px-4 py-2 flex gap-2">
                     <button
