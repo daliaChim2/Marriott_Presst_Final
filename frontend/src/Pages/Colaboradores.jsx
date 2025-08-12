@@ -9,7 +9,7 @@ export default function Colaboradores() {
   const [showForm, setShowForm] = useState(false);
   const [busqueda, setBusqueda] = useState({ nombre: "", hotel: "", numero_asociado: "" });
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState(""); // NUEVO
+  const [success, setSuccess] = useState(""); 
 
   useEffect(() => { fetchEmpleados(); }, []);
 
@@ -164,12 +164,12 @@ export default function Colaboradores() {
               className="border border-gray-300 rounded-xl px-3 py-2 focus:outline-none focus:border-rose-400" />
           </div>
           <div className="flex flex-col">
-            <label className="text-xs text-gray-500 mb-1">Enterpass SID</label>
-            <input name="enterpasssid" value={form.enterpasssid} onChange={handleInput} placeholder="Enterpass SID"
+            <label className="text-xs text-gray-500 mb-1">Enterprise</label>
+            <input name="enterpasssid" value={form.enterpasssid} onChange={handleInput} placeholder="Enterprise"
               className="border border-gray-300 rounded-xl px-3 py-2 focus:outline-none focus:border-rose-400" />
           </div>
           <button type="submit"
-            className="bg-rose-400 hover:bg-rose-500 text-white px-4 py-2 rounded-2xl shadow transition font-semibold">
+            className="bg-rose-900 hover:bg-rose-500 text-white px-4 py-2 rounded-2xl shadow transition font-semibold">
             {editId ? "Actualizar" : "Agregar"}
           </button>
           <button type="button"
@@ -212,7 +212,7 @@ export default function Colaboradores() {
                 <th className="px-4 py-2 font-semibold">Cargo</th>
                 <th className="px-4 py-2 font-semibold">Departamento</th>
                 <th className="px-4 py-2 font-semibold"># Asociado</th>
-                <th className="px-4 py-2 font-semibold">Enterpass SID</th>
+                <th className="px-4 py-2 font-semibold">Enterprise</th>
                 <th className="px-4 py-2 font-semibold">Opciones</th>
               </tr>
             </thead>

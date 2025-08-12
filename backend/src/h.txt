@@ -4,3 +4,12 @@ git push
 
 git clone 
   
+  --------------------------------------------- -
+         |                          |           -
+                                                -
+  AGREGAR CAMBIOS ING. MIGUEL ANTES DE CAMBIAR  -
+            ALGO, NO HACER PUSH!!!              -
+                                                -
+                 |           |                  -
+                                                -
+                                                -
