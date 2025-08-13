@@ -197,7 +197,7 @@ export default function Colaboradores() {
     );
   }, [empleados, busqueda]);
 
-  // 🔎 búsqueda global (en todas las columnas relevantes)
+  // búsqueda global (en todas las columnas relevantes)
   useEffect(() => {
     debouncedSetBusquedaGlobal(busquedaGlobalInput);
   }, [busquedaGlobalInput, debouncedSetBusquedaGlobal]);

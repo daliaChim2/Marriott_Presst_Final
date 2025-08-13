@@ -25,6 +25,7 @@ export default function Resguardos() {
   const [filtroEstado, setFiltroEstado] = useState(""); // "", "activo", "finalizado", "cancelado"
 
   //  búsqueda global
+
   const [busquedaGlobalInput, setBusquedaGlobalInput] = useState("");
   const [busquedaGlobal, setBusquedaGlobal] = useState("");
   const debouncedSetBusquedaGlobal = useRef(
@@ -419,7 +420,7 @@ export default function Resguardos() {
           <option value="cancelado">Cancelado</option>
         </select>
 
-        {/* 🔎 Buscador global */}
+        {/* Buscador global */}
         <div className="ml-auto flex items-center gap-2">
           <input
             value={busquedaGlobalInput}
