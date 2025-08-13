@@ -1,18 +1,83 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
+import debounce from "lodash/debounce";
+
+const normalize = (v) => (v == null ? "" : String(v)).toLowerCase();
+const sortIcon = (active, dir) => (!active ? "↕" : dir === "asc" ? "▲" : "▼");
+const LS_KEY = "colaboradores_ui_state_v1";
 
 export default function Colaboradores() {
   const [empleados, setEmpleados] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [form, setForm] = useState({ nombre: "", hotel: "", cargo: "", departamento: "", numero_asociado: "", enterpasssid: "" });
+
+  // Form
+  const [form, setForm] = useState({
+    nombre: "",
+    hotel: "",
+    cargo: "",
+    departamento: "",
+    numero_asociado: "",
+    enterpasssid: "",
+  });
   const [editId, setEditId] = useState(null);
   const [showForm, setShowForm] = useState(false);
-  const [busqueda, setBusqueda] = useState({ nombre: "", hotel: "", numero_asociado: "" });
+
+  // Filtros específicos
+  const [busqueda, setBusqueda] = useState({
+    nombre: "",
+    hotel: "",
+    numero_asociado: "",
+  });
+
+  // búsqueda global
+  const [busquedaGlobalInput, setBusquedaGlobalInput] = useState("");
+  const [busquedaGlobal, setBusquedaGlobal] = useState("");
+  const debouncedSetBusquedaGlobal = useRef(
+    debounce((v) => setBusquedaGlobal(v.toLowerCase()), 250)
+  ).current;
+
+  // orden
+  const [sortBy, setSortBy] = useState("nombre");
+  const [sortDir, setSortDir] = useState("asc");
+
+  //  paginación
+  const [pageSize, setPageSize] = useState(10); // 10/25/50/0 (0=todos)
+  const [page, setPage] = useState(1);
+
+  // mensajes
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState(""); 
+  const [success, setSuccess] = useState("");
 
+  // ===== Cargar estado de UI guardado
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(LS_KEY) || "{}");
+      if (saved.busqueda) setBusqueda(saved.busqueda);
+      if (typeof saved.busquedaGlobalInput === "string") setBusquedaGlobalInput(saved.busquedaGlobalInput);
+      if (typeof saved.busquedaGlobal === "string") setBusquedaGlobal(saved.busquedaGlobal);
+      if (typeof saved.sortBy === "string") setSortBy(saved.sortBy);
+      if (typeof saved.sortDir === "string") setSortDir(saved.sortDir);
+      if (typeof saved.pageSize === "number") setPageSize(saved.pageSize);
+      if (typeof saved.page === "number") setPage(saved.page);
+    } catch {}
+  }, []);
+
+  // Guardar estado de UI
+  useEffect(() => {
+    const ui = {
+      busqueda,
+      busquedaGlobalInput,
+      busquedaGlobal,
+      sortBy,
+      sortDir,
+      pageSize,
+      page,
+    };
+    localStorage.setItem(LS_KEY, JSON.stringify(ui));
+  }, [busqueda, busquedaGlobalInput, busquedaGlobal, sortBy, sortDir, pageSize, page]);
+
+  // ===== Data
   useEffect(() => { fetchEmpleados(); }, []);
-
   const fetchEmpleados = async () => {
     setLoading(true);
     setError("");
@@ -26,16 +91,14 @@ export default function Colaboradores() {
     setLoading(false);
   };
 
-  const empleadosFiltrados = empleados.filter(emp =>
-    emp.nombre.toLowerCase().includes(busqueda.nombre.toLowerCase()) &&
-    emp.hotel.toLowerCase().includes(busqueda.hotel.toLowerCase()) &&
-    emp.numero_asociado.toLowerCase().includes(busqueda.numero_asociado.toLowerCase())
-  );
+  // ===== Handlers
+  const handleBusqueda = (e) => {
+    setBusqueda({ ...busqueda, [e.target.name]: e.target.value });
+    setPage(1);
+  };
+  const handleInput = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
-  const handleBusqueda = e => setBusqueda({ ...busqueda, [e.target.name]: e.target.value });
-  const handleInput = e => setForm({ ...form, [e.target.name]: e.target.value });
-
-  const handleEdit = emp => {
+  const handleEdit = (emp) => {
     setForm({
       nombre: emp.nombre,
       hotel: emp.hotel,
@@ -50,7 +113,7 @@ export default function Colaboradores() {
     setSuccess("");
   };
 
-  const handleDelete = async id => {
+  const handleDelete = async (id) => {
     if (window.confirm("¿Eliminar este empleado?")) {
       try {
         await axios.delete(`http://localhost:3000/api/empleados/${id}`);
@@ -65,7 +128,7 @@ export default function Colaboradores() {
     }
   };
 
-  const handleSubmit = async e => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setSuccess("");
@@ -77,19 +140,33 @@ export default function Colaboradores() {
         await axios.post("http://localhost:3000/api/empleados", form);
         setSuccess("¡Colaborador agregado correctamente!");
       }
-      setForm({ nombre: "", hotel: "", cargo: "", departamento: "", numero_asociado: "", enterpasssid: "" });
+      setForm({
+        nombre: "",
+        hotel: "",
+        cargo: "",
+        departamento: "",
+        numero_asociado: "",
+        enterpasssid: "",
+      });
       setEditId(null);
       setShowForm(false);
       fetchEmpleados();
       setTimeout(() => setSuccess(""), 2500);
-    } catch (e) {
-      setError(e?.response?.data?.error || "Error en el registro/edición");
+    } catch (e2) {
+      setError(e2?.response?.data?.error || "Error en el registro/edición");
       setSuccess("");
     }
   };
 
   const handleShowAddForm = () => {
-    setForm({ nombre: "", hotel: "", cargo: "", departamento: "", numero_asociado: "", enterpasssid: "" });
+    setForm({
+      nombre: "",
+      hotel: "",
+      cargo: "",
+      departamento: "",
+      numero_asociado: "",
+      enterpasssid: "",
+    });
     setEditId(null);
     setShowForm(true);
     setError("");
@@ -97,11 +174,115 @@ export default function Colaboradores() {
   };
 
   const handleCancel = () => {
-    setForm({ nombre: "", hotel: "", cargo: "", departamento: "", numero_asociado: "", enterpasssid: "" });
+    setForm({
+      nombre: "",
+      hotel: "",
+      cargo: "",
+      departamento: "",
+      numero_asociado: "",
+      enterpasssid: "",
+    });
     setEditId(null);
     setShowForm(false);
     setError("");
     setSuccess("");
+  };
+
+  // ===== Filtros específicos (como tenías)
+  const porFiltros = useMemo(() => {
+    return empleados.filter((emp) =>
+      emp.nombre.toLowerCase().includes((busqueda.nombre || "").toLowerCase()) &&
+      emp.hotel.toLowerCase().includes((busqueda.hotel || "").toLowerCase()) &&
+      emp.numero_asociado.toLowerCase().includes((busqueda.numero_asociado || "").toLowerCase())
+    );
+  }, [empleados, busqueda]);
+
+  // 🔎 búsqueda global (en todas las columnas relevantes)
+  useEffect(() => {
+    debouncedSetBusquedaGlobal(busquedaGlobalInput);
+  }, [busquedaGlobalInput, debouncedSetBusquedaGlobal]);
+
+  const filtrados = useMemo(() => {
+    if (!busquedaGlobal) return porFiltros;
+    return porFiltros.filter((e) => {
+      const hay = [
+        e.nombre,
+        e.hotel,
+        e.cargo,
+        e.departamento,
+        e.numero_asociado,
+        e.enterpasssid,
+      ]
+        .map(normalize)
+        .join(" ");
+      return hay.includes(busquedaGlobal);
+    });
+  }, [porFiltros, busquedaGlobal]);
+
+  // Orden
+  const onSort = (campo) => {
+    if (sortBy === campo) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortBy(campo);
+      setSortDir("asc");
+    }
+    setPage(1);
+  };
+
+  const sorted = useMemo(() => {
+    const arr = [...filtrados];
+    const dir = sortDir === "asc" ? 1 : -1;
+
+    arr.sort((a, b) => {
+      const va = normalize(a[sortBy] ?? "");
+      const vb = normalize(b[sortBy] ?? "");
+      if (va < vb) return -1 * dir;
+      if (va > vb) return 1 * dir;
+      return 0;
+    });
+
+    return arr;
+  }, [filtrados, sortBy, sortDir]);
+
+  // Paginación
+  const total = sorted.length;
+  const pageCount = pageSize === 0 ? 1 : Math.max(1, Math.ceil(total / pageSize));
+  const currentPage = Math.min(page, pageCount);
+
+  const pageSlice =
+    pageSize === 0
+      ? sorted
+      : sorted.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  const from = pageSize === 0 ? (total === 0 ? 0 : 1) : (currentPage - 1) * pageSize + 1;
+  const to = pageSize === 0 ? total : Math.min(currentPage * pageSize, total);
+
+  const gotoPage = (p) => setPage(Math.min(Math.max(p, 1), pageCount));
+
+  const pageNumbers = useMemo(() => {
+    const maxBtns = 7;
+    if (pageCount <= maxBtns) {
+      return Array.from({ length: pageCount }, (_, i) => i + 1);
+    }
+    const left = Math.max(1, currentPage - 2);
+    const right = Math.min(pageCount, currentPage + 2);
+    const base = [];
+    if (left > 1) base.push(1, "…");
+    for (let i = left; i <= right; i++) base.push(i);
+    if (right < pageCount) base.push("…", pageCount);
+    return base;
+  }, [currentPage, pageCount]);
+
+  const clearUI = () => {
+    setBusqueda({ nombre: "", hotel: "", numero_asociado: "" });
+    setBusquedaGlobalInput("");
+    setBusquedaGlobal("");
+    setSortBy("nombre");
+    setSortDir("asc");
+    setPageSize(10);
+    setPage(1);
+    localStorage.removeItem(LS_KEY);
   };
 
   return (
@@ -120,8 +301,6 @@ export default function Colaboradores() {
         </div>
       )}
 
- 
-
       {!showForm && (
         <button
           onClick={handleShowAddForm}
@@ -132,17 +311,30 @@ export default function Colaboradores() {
       )}
 
       {showForm && (
-        <form onSubmit={handleSubmit} className="mb-8 flex flex-wrap gap-3 items-end bg-gray-50 p-4 rounded-2xl shadow">
-          {/* ... [campos como antes] ... */}
+        <form
+          onSubmit={handleSubmit}
+          className="mb-8 flex flex-wrap gap-3 items-end bg-gray-50 p-4 rounded-2xl shadow"
+        >
           <div className="flex flex-col">
             <label className="text-xs text-gray-500 mb-1">Nombre completo</label>
-            <input name="nombre" value={form.nombre} onChange={handleInput} required placeholder="Nombre completo"
-              className="border border-gray-300 rounded-xl px-3 py-2 focus:outline-none focus:border-rose-400" />
+            <input
+              name="nombre"
+              value={form.nombre}
+              onChange={handleInput}
+              required
+              placeholder="Nombre completo"
+              className="border border-gray-300 rounded-xl px-3 py-2 focus:outline-none focus:border-rose-400"
+            />
           </div>
           <div className="flex flex-col">
             <label className="text-xs text-gray-500 mb-1">Hotel</label>
-            <select name="hotel" value={form.hotel} onChange={handleInput} required
-              className="border border-gray-300 rounded-xl px-3 py-2 focus:outline-none focus:border-rose-400 bg-white">
+            <select
+              name="hotel"
+              value={form.hotel}
+              onChange={handleInput}
+              required
+              className="border border-gray-300 rounded-xl px-3 py-2 focus:outline-none focus:border-rose-400 bg-white"
+            >
               <option value="">Selecciona hotel...</option>
               <option value="JW Marriott">JW Marriott</option>
               <option value="Marriott Resort">Marriott Resort</option>
@@ -150,41 +342,72 @@ export default function Colaboradores() {
           </div>
           <div className="flex flex-col">
             <label className="text-xs text-gray-500 mb-1">Cargo/Puesto</label>
-            <input name="cargo" value={form.cargo} onChange={handleInput} required placeholder="Cargo/Puesto"
-              className="border border-gray-300 rounded-xl px-3 py-2 focus:outline-none focus:border-rose-400" />
+            <input
+              name="cargo"
+              value={form.cargo}
+              onChange={handleInput}
+              required
+              placeholder="Cargo/Puesto"
+              className="border border-gray-300 rounded-xl px-3 py-2 focus:outline-none focus:border-rose-400"
+            />
           </div>
           <div className="flex flex-col">
             <label className="text-xs text-gray-500 mb-1">Departamento</label>
-            <input name="departamento" value={form.departamento} onChange={handleInput} required placeholder="Departamento"
-              className="border border-gray-300 rounded-xl px-3 py-2 focus:outline-none focus:border-rose-400" />
+            <input
+              name="departamento"
+              value={form.departamento}
+              onChange={handleInput}
+              required
+              placeholder="Departamento"
+              className="border border-gray-300 rounded-xl px-3 py-2 focus:outline-none focus:border-rose-400"
+            />
           </div>
           <div className="flex flex-col">
             <label className="text-xs text-gray-500 mb-1"># Asociado</label>
-            <input name="numero_asociado" value={form.numero_asociado} onChange={handleInput} required placeholder="# Asociado"
-              className="border border-gray-300 rounded-xl px-3 py-2 focus:outline-none focus:border-rose-400" />
+            <input
+              name="numero_asociado"
+              value={form.numero_asociado}
+              onChange={handleInput}
+              required
+              placeholder="# Asociado"
+              className="border border-gray-300 rounded-xl px-3 py-2 focus:outline-none focus:border-rose-400"
+            />
           </div>
           <div className="flex flex-col">
             <label className="text-xs text-gray-500 mb-1">Enterprise</label>
-            <input name="enterpasssid" value={form.enterpasssid} onChange={handleInput} placeholder="Enterprise"
-              className="border border-gray-300 rounded-xl px-3 py-2 focus:outline-none focus:border-rose-400" />
+            <input
+              name="enterpasssid"
+              value={form.enterpasssid}
+              onChange={handleInput}
+              placeholder="Enterprise"
+              className="border border-gray-300 rounded-xl px-3 py-2 focus:outline-none focus:border-rose-400"
+            />
           </div>
-          <button type="submit"
-            className="bg-rose-900 hover:bg-rose-500 text-white px-4 py-2 rounded-2xl shadow transition font-semibold">
+          <button
+            type="submit"
+            className="bg-rose-900 hover:bg-rose-500 text-white px-4 py-2 rounded-2xl shadow transition font-semibold"
+          >
             {editId ? "Actualizar" : "Agregar"}
           </button>
-          <button type="button"
+          <button
+            type="button"
             onClick={handleCancel}
-            className="bg-gray-300 hover:bg-gray-400 px-3 py-2 rounded-2xl shadow transition text-gray-800 font-semibold">
+            className="bg-gray-300 hover:bg-gray-400 px-3 py-2 rounded-2xl shadow transition text-gray-800 font-semibold"
+          >
             Cancelar
           </button>
         </form>
       )}
 
-           {/* Filtros live search */}
-      <div className="flex flex-wrap gap-2 mb-6">
-        <input name="nombre" value={busqueda.nombre} onChange={handleBusqueda}
+      {/* Barra de filtros + búsqueda global */}
+      <div className="flex flex-wrap gap-2 mb-3 items-center bg-white p-3 rounded-xl shadow border border-gray-200">
+        <input
+          name="nombre"
+          value={busqueda.nombre}
+          onChange={handleBusqueda}
           placeholder="Buscar por nombre"
-          className="border border-gray-300 rounded-xl px-3 py-2 focus:outline-none focus:border-rose-400 transition" />
+          className="border border-gray-300 rounded-xl px-3 py-2 focus:outline-none focus:border-rose-400 transition"
+        />
         <select
           name="hotel"
           value={busqueda.hotel}
@@ -195,29 +418,112 @@ export default function Colaboradores() {
           <option value="JW Marriott">JW Marriott</option>
           <option value="Marriott Resort">Marriott Resort</option>
         </select>
-        <input name="numero_asociado" value={busqueda.numero_asociado} onChange={handleBusqueda}
+        <input
+          name="numero_asociado"
+          value={busqueda.numero_asociado}
+          onChange={handleBusqueda}
           placeholder="Filtrar por # asociado"
-          className="border border-gray-300 rounded-xl px-3 py-2 focus:outline-none focus:border-rose-400 transition" />
+          className="border border-gray-300 rounded-xl px-3 py-2 focus:outline-none focus:border-rose-400 transition"
+        />
+
+        {/* Global */}
+        <div className="ml-auto flex items-center gap-2">
+          <input
+            value={busquedaGlobalInput}
+            onChange={(e) => {
+              setBusquedaGlobalInput(e.target.value);
+              setPage(1);
+            }}
+            placeholder="Buscar en toda la tabla…"
+            className="border border-gray-300 rounded-xl px-3 py-2 w-64"
+          />
+          <button
+            onClick={() => {
+              setBusquedaGlobalInput("");
+              setBusquedaGlobal("");
+              setPage(1);
+            }}
+            className="px-3 py-2 rounded-xl bg-gray-100 hover:bg-gray-200"
+            title="Limpiar búsqueda"
+          >
+            ✕
+          </button>
+
+          {(busqueda.nombre || busqueda.hotel || busqueda.numero_asociado || busquedaGlobalInput) && (
+            <button
+              className="text-xs px-3 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 border"
+              onClick={clearUI}
+            >
+              Limpiar filtros
+            </button>
+          )}
+        </div>
       </div>
 
+      {/* Barra superior de paginación */}
+      <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
+        <div className="flex items-center gap-2">
+          <span>Mostrar</span>
+          <select
+            className="border rounded-lg px-2 py-1 bg-white"
+            value={pageSize}
+            onChange={(e) => {
+              const val = parseInt(e.target.value, 10);
+              setPageSize(val);
+              setPage(1);
+            }}
+          >
+            <option value={10}>10</option>
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+            <option value={0}>Todos</option>
+          </select>
+          <span>por página</span>
+        </div>
+        <div>
+          Mostrando{" "}
+          <span className="font-semibold">
+            {sorted.length === 0 ? 0 : from}–{to}
+          </span>{" "}
+          de <span className="font-semibold">{sorted.length}</span>
+        </div>
+      </div>
+
+      {/* Tabla */}
       {loading ? (
         <p className="text-gray-500">Cargando...</p>
       ) : (
         <div className="overflow-x-auto bg-white rounded-2xl shadow border border-gray-200">
           <table className="min-w-full text-sm">
             <thead>
-              <tr className="bg-gray-200 text-gray-700">
-                <th className="px-4 py-2 font-semibold">Nombre</th>
-                <th className="px-4 py-2 font-semibold">Hotel</th>
-                <th className="px-4 py-2 font-semibold">Cargo</th>
-                <th className="px-4 py-2 font-semibold">Departamento</th>
-                <th className="px-4 py-2 font-semibold"># Asociado</th>
-                <th className="px-4 py-2 font-semibold">Enterprise</th>
+              <tr className="bg-gray-200 text-gray-700 select-none">
+                {[
+                  ["nombre", "Nombre"],
+                  ["hotel", "Hotel"],
+                  ["cargo", "Cargo"],
+                  ["departamento", "Departamento"],
+                  ["numero_asociado", "# Asociado"],
+                  ["enterpasssid", "Enterprise"],
+                ].map(([key, label]) => (
+                  <th
+                    key={key}
+                    className="px-4 py-2 font-semibold cursor-pointer hover:bg-gray-300"
+                    onClick={() => onSort(key)}
+                    title={`Ordenar por ${label}`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span>{label}</span>
+                      <span className="text-xs opacity-70">
+                        {sortIcon(sortBy === key, sortDir)}
+                      </span>
+                    </div>
+                  </th>
+                ))}
                 <th className="px-4 py-2 font-semibold">Opciones</th>
               </tr>
             </thead>
             <tbody>
-              {empleadosFiltrados.map(emp => (
+              {pageSlice.map((emp) => (
                 <tr key={emp.id} className="border-t border-gray-200 hover:bg-rose-50 transition">
                   <td className="px-4 py-2">{emp.nombre}</td>
                   <td className="px-4 py-2">{emp.hotel}</td>
@@ -226,21 +532,90 @@ export default function Colaboradores() {
                   <td className="px-4 py-2">{emp.numero_asociado}</td>
                   <td className="px-4 py-2">{emp.enterpasssid}</td>
                   <td className="px-4 py-2 flex gap-2">
-                    <button onClick={() => handleEdit(emp)}
-                      className="text-rose-900 bg-gray-200 hover:bg-gray-400 transition rounded-xl px-2 py-1 font-semibold shadow">
+                    <button
+                      onClick={() => handleEdit(emp)}
+                      className="text-rose-900 bg-gray-200 hover:bg-gray-400 transition rounded-xl px-2 py-1 font-semibold shadow"
+                    >
                       Editar
                     </button>
-                    <button onClick={() => handleDelete(emp.id)}
-                      className="text-white bg-rose-900 hover:bg-rose-600 transition rounded-xl px-2 py-1 font-semibold shadow">
+                    <button
+                      onClick={() => handleDelete(emp.id)}
+                      className="text-white bg-rose-900 hover:bg-rose-600 transition rounded-xl px-2 py-1 font-semibold shadow"
+                    >
                       Eliminar
                     </button>
                   </td>
                 </tr>
               ))}
+
+              {pageSlice.length === 0 && (
+                <tr>
+                  <td className="px-4 py-6 text-center text-gray-400" colSpan={7}>
+                    Sin resultados
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
       )}
+
+      {/* Controles de paginación */}
+      {pageSize !== 0 && ( // si no es “Todos”
+        <div className="flex items-center justify-center gap-1 mt-3">
+          <button
+            className="px-3 py-1 rounded-lg bg-gray-100 hover:bg-gray-200"
+            onClick={() => gotoPage(1)}
+            disabled={currentPage === 1}
+            title="Primera"
+          >
+            «
+          </button>
+          <button
+            className="px-3 py-1 rounded-lg bg-gray-100 hover:bg-gray-200"
+            onClick={() => gotoPage(currentPage - 1)}
+            disabled={currentPage === 1}
+            title="Anterior"
+          >
+            ‹
+          </button>
+          {pageNumbers.map((n, i) =>
+            n === "…" ? (
+              <span key={`ellipsis-${i}`} className="px-2 text-gray-400">
+                …
+              </span>
+            ) : (
+              <button
+                key={n}
+                onClick={() => gotoPage(n)}
+                className={`px-3 py-1 rounded-lg ${
+                  n === currentPage
+                    ? "bg-rose-500 text-white"
+                    : "bg-gray-100 hover:bg-gray-200"
+                }`}
+              >
+                {n}
+              </button>
+            )
+          )}
+          <button
+            className="px-3 py-1 rounded-lg bg-gray-100 hover:bg-gray-200"
+            onClick={() => gotoPage(currentPage + 1)}
+            disabled={currentPage === pageCount}
+            title="Siguiente"
+          >
+            ›
+          </button>
+          <button
+            className="px-3 py-1 rounded-lg bg-gray-100 hover:bg-gray-200"
+            onClick={() => gotoPage(pageCount)}
+            disabled={currentPage === pageCount}
+            title="Última"
+          >
+            »
+          </button>
+        </div>
+      )}
     </div>
   );
-} 
+}

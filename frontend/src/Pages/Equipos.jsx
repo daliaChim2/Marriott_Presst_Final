@@ -127,18 +127,18 @@ export default function Equipos() {
     hotel: "",
   });
 
-  // 🔎 Filtro global
+  //  Filtro global
   const [busquedaGlobalInput, setBusquedaGlobalInput] = useState("");
   const [busquedaGlobal, setBusquedaGlobal] = useState("");
   const debouncedSetBusquedaGlobal = useRef(
     debounce((v) => setBusquedaGlobal(v.toLowerCase()), 250)
   ).current;
 
-  // 🔽 Ordenamiento
+  //  Ordenamiento
   const [sortBy, setSortBy] = useState("id"); // campo
   const [sortDir, setSortDir] = useState("asc"); // 'asc' | 'desc'
 
-  // ◀️▶️ Paginación
+  //  Paginación
   const [pageSize, setPageSize] = useState(10); // 10/25/50/0 (0 = todos)
   const [page, setPage] = useState(1);
 
@@ -359,7 +359,7 @@ export default function Equipos() {
     [articulos, busqueda]
   );
 
-  /* ---- 🔎 Filtro global ---- */
+  /* ---- Filtro global ---- */
   useEffect(() => {
     debouncedSetBusquedaGlobal(busquedaGlobalInput);
   }, [busquedaGlobalInput, debouncedSetBusquedaGlobal]);
@@ -521,7 +521,7 @@ export default function Equipos() {
           Limpiar filtros
         </button>
 
-        {/* 🔎 Buscador Global */}
+        {/* Buscador Global */}
         <div className="ml-auto flex items-center gap-2">
           <input
             value={busquedaGlobalInput}
