@@ -4,7 +4,7 @@ import debounce from "lodash/debounce";
 
 const normalize = (v) => (v == null ? "" : String(v)).toLowerCase();
 const sortIcon = (active, dir) => (!active ? "↕" : dir === "asc" ? "▲" : "▼");
-const LS_KEY = "colaboradores_ui_state_v1";
+const LS_KEY = "colaboradores_ui_state_v2"; // nueva versión de estado UI
 
 export default function Colaboradores() {
   const [empleados, setEmpleados] = useState([]);
@@ -18,6 +18,7 @@ export default function Colaboradores() {
     departamento: "",
     numero_asociado: "",
     enterpasssid: "",
+    status: "activo",
   });
   const [editId, setEditId] = useState(null);
   const [showForm, setShowForm] = useState(false);
@@ -27,6 +28,7 @@ export default function Colaboradores() {
     nombre: "",
     hotel: "",
     numero_asociado: "",
+    status: "",
   });
 
   // búsqueda global
@@ -40,15 +42,15 @@ export default function Colaboradores() {
   const [sortBy, setSortBy] = useState("nombre");
   const [sortDir, setSortDir] = useState("asc");
 
-  //  paginación
-  const [pageSize, setPageSize] = useState(10); // 10/25/50/0 (0=todos)
+  // paginación
+  const [pageSize, setPageSize] = useState(10);
   const [page, setPage] = useState(1);
 
   // mensajes
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // ===== Cargar estado de UI guardado
+  // Cargar estado UI
   useEffect(() => {
     try {
       const saved = JSON.parse(localStorage.getItem(LS_KEY) || "{}");
@@ -62,7 +64,7 @@ export default function Colaboradores() {
     } catch {}
   }, []);
 
-  // Guardar estado de UI
+  // Guardar UI
   useEffect(() => {
     const ui = {
       busqueda,
@@ -76,7 +78,7 @@ export default function Colaboradores() {
     localStorage.setItem(LS_KEY, JSON.stringify(ui));
   }, [busqueda, busquedaGlobalInput, busquedaGlobal, sortBy, sortDir, pageSize, page]);
 
-  // ===== Data
+  // Data
   useEffect(() => { fetchEmpleados(); }, []);
   const fetchEmpleados = async () => {
     setLoading(true);
@@ -91,7 +93,7 @@ export default function Colaboradores() {
     setLoading(false);
   };
 
-  // ===== Handlers
+  // Handlers
   const handleBusqueda = (e) => {
     setBusqueda({ ...busqueda, [e.target.name]: e.target.value });
     setPage(1);
@@ -106,6 +108,7 @@ export default function Colaboradores() {
       departamento: emp.departamento || "",
       numero_asociado: emp.numero_asociado,
       enterpasssid: emp.enterpasssid || "",
+      status: emp.status || "activo",
     });
     setEditId(emp.id);
     setShowForm(true);
@@ -147,6 +150,7 @@ export default function Colaboradores() {
         departamento: "",
         numero_asociado: "",
         enterpasssid: "",
+        status: "activo",
       });
       setEditId(null);
       setShowForm(false);
@@ -166,6 +170,7 @@ export default function Colaboradores() {
       departamento: "",
       numero_asociado: "",
       enterpasssid: "",
+      status: "activo",
     });
     setEditId(null);
     setShowForm(true);
@@ -181,6 +186,7 @@ export default function Colaboradores() {
       departamento: "",
       numero_asociado: "",
       enterpasssid: "",
+      status: "activo",
     });
     setEditId(null);
     setShowForm(false);
@@ -188,16 +194,17 @@ export default function Colaboradores() {
     setSuccess("");
   };
 
-  // ===== Filtros específicos (como tenías)
+  // Filtros específicos
   const porFiltros = useMemo(() => {
     return empleados.filter((emp) =>
       emp.nombre.toLowerCase().includes((busqueda.nombre || "").toLowerCase()) &&
       emp.hotel.toLowerCase().includes((busqueda.hotel || "").toLowerCase()) &&
-      emp.numero_asociado.toLowerCase().includes((busqueda.numero_asociado || "").toLowerCase())
+      emp.numero_asociado.toLowerCase().includes((busqueda.numero_asociado || "").toLowerCase()) &&
+      (busqueda.status === "" || (emp.status || "").toLowerCase() === busqueda.status.toLowerCase())
     );
   }, [empleados, busqueda]);
 
-  // búsqueda global (en todas las columnas relevantes)
+  // búsqueda global
   useEffect(() => {
     debouncedSetBusquedaGlobal(busquedaGlobalInput);
   }, [busquedaGlobalInput, debouncedSetBusquedaGlobal]);
@@ -212,6 +219,7 @@ export default function Colaboradores() {
         e.departamento,
         e.numero_asociado,
         e.enterpasssid,
+        e.status,
       ]
         .map(normalize)
         .join(" ");
@@ -275,7 +283,7 @@ export default function Colaboradores() {
   }, [currentPage, pageCount]);
 
   const clearUI = () => {
-    setBusqueda({ nombre: "", hotel: "", numero_asociado: "" });
+    setBusqueda({ nombre: "", hotel: "", numero_asociado: "", status: "" });
     setBusquedaGlobalInput("");
     setBusquedaGlobal("");
     setSortBy("nombre");
@@ -383,6 +391,21 @@ export default function Colaboradores() {
               className="border border-gray-300 rounded-xl px-3 py-2 focus:outline-none focus:border-rose-400"
             />
           </div>
+
+          {/* Estatus */}
+          <div className="flex flex-col">
+            <label className="text-xs text-gray-500 mb-1">Estatus</label>
+            <select
+              name="status"
+              value={form.status}
+              onChange={handleInput}
+              className="border border-gray-300 rounded-xl px-3 py-2 focus:outline-none bg-white"
+            >
+              <option value="activo">Activo</option>
+              <option value="inactivo">Inactivo</option>
+            </select>
+          </div>
+
           <button
             type="submit"
             className="bg-rose-900 hover:bg-rose-500 text-white px-4 py-2 rounded-2xl shadow transition font-semibold"
@@ -426,6 +449,18 @@ export default function Colaboradores() {
           className="border border-gray-300 rounded-xl px-3 py-2 focus:outline-none focus:border-rose-400 transition"
         />
 
+        {/* Filtro por estatus */}
+        <select
+          name="status"
+          value={busqueda.status}
+          onChange={handleBusqueda}
+          className="border border-gray-300 rounded-xl px-3 py-2 focus:outline-none bg-white"
+        >
+          <option value="">Todos los estatus</option>
+          <option value="activo">Activo</option>
+          <option value="inactivo">Inactivo</option>
+        </select>
+
         {/* Global */}
         <div className="ml-auto flex items-center gap-2">
           <input
@@ -449,7 +484,7 @@ export default function Colaboradores() {
             ✕
           </button>
 
-          {(busqueda.nombre || busqueda.hotel || busqueda.numero_asociado || busquedaGlobalInput) && (
+          {(busqueda.nombre || busqueda.hotel || busqueda.numero_asociado || busqueda.status || busquedaGlobalInput) && (
             <button
               className="text-xs px-3 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 border"
               onClick={clearUI}
@@ -504,6 +539,7 @@ export default function Colaboradores() {
                   ["departamento", "Departamento"],
                   ["numero_asociado", "# Asociado"],
                   ["enterpasssid", "Enterprise"],
+                  ["status", "Estatus"],
                 ].map(([key, label]) => (
                   <th
                     key={key}
@@ -531,6 +567,15 @@ export default function Colaboradores() {
                   <td className="px-4 py-2">{emp.departamento}</td>
                   <td className="px-4 py-2">{emp.numero_asociado}</td>
                   <td className="px-4 py-2">{emp.enterpasssid}</td>
+                  <td className="px-4 py-2">
+                    <span
+                      className={`inline-block px-2 py-1 rounded-full text-xs font-semibold
+                        ${ (emp.status || 'activo') === 'activo' ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-700' }
+                      `}
+                    >
+                      {emp.status || 'activo'}
+                    </span>
+                  </td>
                   <td className="px-4 py-2 flex gap-2">
                     <button
                       onClick={() => handleEdit(emp)}
@@ -550,7 +595,7 @@ export default function Colaboradores() {
 
               {pageSlice.length === 0 && (
                 <tr>
-                  <td className="px-4 py-6 text-center text-gray-400" colSpan={7}>
+                  <td className="px-4 py-6 text-center text-gray-400" colSpan={8}>
                     Sin resultados
                   </td>
                 </tr>
@@ -561,7 +606,7 @@ export default function Colaboradores() {
       )}
 
       {/* Controles de paginación */}
-      {pageSize !== 0 && ( // si no es “Todos”
+      {pageSize !== 0 && (
         <div className="flex items-center justify-center gap-1 mt-3">
           <button
             className="px-3 py-1 rounded-lg bg-gray-100 hover:bg-gray-200"

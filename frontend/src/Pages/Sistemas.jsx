@@ -32,35 +32,47 @@ export default function Sistemas() {
       .catch(() => setError("Error al cargar artículos"));
   }, []);
 
-  // 2. Cuando se selecciona empleado, filtra artículos por hotel
+  // 2. Cuando se selecciona empleado, filtra artículos por hotel.
+  //    Si el empleado está INACTIVO, limpia la selección y muestra aviso.
   useEffect(() => {
     if (!form.empleado_id) {
       setArticulos([]);
       return;
     }
     const empleado = empleados.find(e => e.id === parseInt(form.empleado_id));
-    if (empleado) {
-      setArticulos(
-        todosArticulos.filter(
-          a => a.hotel === empleado.hotel
-        )
-      );
-      // Limpia los artículos seleccionados que no son de ese hotel
-      setForm(f => ({
-        ...f,
-        articulos: f.articulos.filter(id => {
-          const art = todosArticulos.find(a => a.id === id);
-          return art && art.hotel === empleado.hotel;
-        })
-      }));
+    if (!empleado) {
+      setArticulos([]);
+      return;
     }
+
+    // Bloquear empleados inactivos
+    const estatus = (empleado.status || "activo").toLowerCase();
+    if (estatus !== "activo") {
+      setError("El colaborador está INACTIVO. No se pueden registrar préstamos.");
+      setForm(f => ({ ...f, empleado_id: "", articulos: [] }));
+      setArticulos([]);
+      return;
+    }
+
+    // Filtrar artículos por hotel del empleado
+    setArticulos(
+      todosArticulos.filter(a => a.hotel === empleado.hotel)
+    );
+    // Limpia artículos seleccionados que no son de ese hotel
+    setForm(f => ({
+      ...f,
+      articulos: f.articulos.filter(id => {
+        const art = todosArticulos.find(a => a.id === id);
+        return art && art.hotel === empleado.hotel;
+      })
+    }));
   }, [form.empleado_id, empleados, todosArticulos]);
 
   // 3. Buscador en vivo por número de serie sobre artículos disponibles del hotel
   const articulosFiltrados = articulos.filter(
     a =>
-      a.numero_serie.toLowerCase().includes(busquedaSerie.toLowerCase()) ||
-      a.id.toLowerCase().includes(busquedaSerie.toLowerCase())
+      (a.numero_serie || "").toLowerCase().includes(busquedaSerie.toLowerCase()) ||
+      (a.id || "").toLowerCase().includes(busquedaSerie.toLowerCase())
   );
 
   // 4. Actualización automática fecha vencimiento (solo visual, backend igual calcula)
@@ -83,6 +95,7 @@ export default function Sistemas() {
     } else {
       setForm(f => ({ ...f, [name]: value }));
     }
+    setError(""); // limpia cualquier error al cambiar campos
   };
 
   // 6. Seleccionar/deseleccionar artículos de la lista (click en la mini-lista)
@@ -115,13 +128,27 @@ export default function Sistemas() {
   const handleSubmit = async e => {
     e.preventDefault();
     setError(""); setSuccess("");
-    if (!form.empleado_id || form.articulos.length === 0)
+
+    if (!form.empleado_id || form.articulos.length === 0) {
       return setError("Completa todos los campos obligatorios.");
+    }
+
+    const empleadoSel = empleados.find(e => String(e.id) === String(form.empleado_id));
+    if (!empleadoSel) {
+      setError("Selecciona un colaborador válido.");
+      return;
+    }
 
     // Chequeo frontend: No permitir autopréstamo
-    const empleadoSel = empleados.find(e => String(e.id) === String(form.empleado_id));
     if (empleadoSel && empleadoSel.nombre === usuarioLogueado.nombre) {
       setError("No puedes auto-prestarte artículos.");
+      return;
+    }
+
+    // Chequeo frontend: No permitir préstamos a INACTIVO
+    const estatus = (empleadoSel.status || "activo").toLowerCase();
+    if (estatus !== "activo") {
+      setError("El colaborador está INACTIVO. No se pueden registrar préstamos.");
       return;
     }
 
@@ -144,13 +171,20 @@ export default function Sistemas() {
       const res = await axios.get("http://localhost:3000/api/articulos/disponibles");
       setTodosArticulos(res.data);
       setArticulos([]);
-    } catch (e) {
-      setError(e?.response?.data?.error || "Error al registrar préstamo");
+    } catch (e2) {
+      setError(e2?.response?.data?.error || "Error al registrar préstamo");
     }
   };
 
   // Obtén objetos de los artículos seleccionados para la mini-lista
   const articulosSeleccionados = articulos.filter(a => form.articulos.includes(a.id));
+
+  // Ordenar empleados (activos primero) y ocultar usuario logueado
+  const empleadosActivos = empleados
+    .filter(e => e.nombre !== usuarioLogueado.nombre && (e.status || "activo").toLowerCase() === "activo");
+
+  const empleadosInactivos = empleados
+    .filter(e => e.nombre !== usuarioLogueado.nombre && (e.status || "activo").toLowerCase() !== "activo");
 
   return (
     <div className="max-w-3xl mx-auto mt-8 bg-white p-6 rounded-2xl shadow">
@@ -167,15 +201,31 @@ export default function Sistemas() {
             className="border border-gray-300 rounded-xl px-3 py-2 w-full bg-white"
           >
             <option value="">Selecciona empleado...</option>
-            {empleados
-              .filter(e => e.nombre !== usuarioLogueado.nombre) // Oculta al usuario logueado
-              .map(e => (
-                <option key={e.id} value={e.id}>
-                  {e.nombre} ({e.numero_asociado}) - {e.hotel}
-                </option>
-              ))}
+
+            {/* Activos */}
+            {empleadosActivos.length > 0 && (
+              <optgroup label="Activos">
+                {empleadosActivos.map(e => (
+                  <option key={e.id} value={e.id}>
+                    {e.nombre} ({e.numero_asociado}) - {e.hotel}
+                  </option>
+                ))}
+              </optgroup>
+            )}
+
+            {/* Inactivos (deshabilitados) */}
+            {empleadosInactivos.length > 0 && (
+              <optgroup label="Inactivos (no disponibles)">
+                {empleadosInactivos.map(e => (
+                  <option key={e.id} value={e.id} disabled>
+                    {e.nombre} ({e.numero_asociado}) - {e.hotel} — INACTIVO
+                  </option>
+                ))}
+              </optgroup>
+            )}
           </select>
         </div>
+
         {/* Artículos con buscador por número de serie */}
         <div>
           <label className="block text-xs mb-1 text-gray-500">Artículos a prestar (por número de serie o nombre)</label>
@@ -202,6 +252,7 @@ export default function Sistemas() {
                 </div>
               ))}
           </div>
+
           {/* Mini-lista de artículos seleccionados */}
           {form.articulos.length > 0 && (
             <div className="mb-2 flex flex-wrap gap-2">
@@ -218,6 +269,7 @@ export default function Sistemas() {
             </div>
           )}
         </div>
+
         {/* Responsable de sistemas */}
         <div>
           <label className="block text-xs mb-1 text-gray-500">Entregado por (responsable de sistemas)</label>
@@ -228,6 +280,7 @@ export default function Sistemas() {
             disabled
           />
         </div>
+
         {/* Comentarios */}
         <div>
           <label className="block text-xs mb-1 text-gray-500">Comentarios/Observaciones</label>
@@ -240,6 +293,7 @@ export default function Sistemas() {
             className="border border-rose-900 rounded-2xl px-3 py-2 w-full bg-rose-50 focus:border-rose-400 transition"
           />
         </div>
+
         {/* Fechas y periodo */}
         <div className="flex gap-3 items-end">
           <div>
@@ -268,6 +322,7 @@ export default function Sistemas() {
             />
           </div>
         </div>
+
         {/* Botón */}
         <button type="submit"
           className="bg-rose-900 hover:bg-rose-500 text-white px-6 py-2 rounded-2xl shadow font-semibold">
