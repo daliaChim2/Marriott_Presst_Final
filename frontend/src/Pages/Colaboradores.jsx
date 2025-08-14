@@ -4,7 +4,7 @@ import debounce from "lodash/debounce";
 
 const normalize = (v) => (v == null ? "" : String(v)).toLowerCase();
 const sortIcon = (active, dir) => (!active ? "↕" : dir === "asc" ? "▲" : "▼");
-const LS_KEY = "colaboradores_ui_state_v2"; // nueva versión de estado UI
+const LS_KEY = "colaboradores_ui_state_v2"; 
 
 export default function Colaboradores() {
   const [empleados, setEmpleados] = useState([]);

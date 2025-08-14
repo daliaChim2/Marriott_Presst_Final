@@ -30,7 +30,7 @@ exports.create = (req, res) => {
 
 // Editar empleado (impide pasar a inactivo si tiene préstamos activos)
 exports.update = (req, res) => {
-  const { nombre, hotel, cargo, departamento, numero_asociado, enterpasssid, status } = req.body;
+  const { nombre, hotel, cergo, departamento, numero_asociado, enterpasssid, status } = req.body;
   const { id } = req.params;
 
   // Si intentan poner INACTIVO, primero verificar préstamos activos
@@ -73,7 +73,7 @@ exports.update = (req, res) => {
     (e, r) => {
       if (e) return res.status(500).json({ error: 'Error al validar préstamos activos' });
       if (r[0].total > 0) {
-        return res.status(409).json({ error: 'No se puede cambiar a INACTIVO: el colaborador tiene préstamos activos.' });
+        return res.status(409).json({ error: 'No se puede cambiar a INACTIVO: el colaborador tiene prestamos activos' });
       }
       continuarActualizacion();
     }
@@ -88,3 +88,70 @@ exports.delete = (req, res) => {
     res.status(204).send();
   });
 };
+
+// Nueva función: carga masiva de empleados
+exports.bulkUpload = (req, res) => {
+  const { rows } = req.body;
+  const { mode } = req.query; // 'upsert' o 'insert'
+
+  if (!rows || !Array.isArray(rows) || rows.length === 0) {
+    return res.status(400).json({ error: 'No hay datos para insertar.' });
+  }
+
+  // Normalizar status
+  const normalizeStatus = (status) => {
+    return (status === 'inactivo' || status === 'activo') ? status : 'activo';
+  };
+
+  try {
+    // Construir consultas en lotes...
+    const values = rows.map(emp => [
+      emp.nombre?.trim() || '',
+      emp.hotel?.trim() || '',
+      emp.cargo?.trim() || '',
+      emp.departamento?.trim() || '',
+      emp.numero_asociado?.trim() || '',
+      emp.enterpasssid?.trim() || '',
+      normalizeStatus(emp.status)
+    ]);
+
+    let sql;
+
+    if (mode === 'upsert') {
+      sql = `
+        INSERT INTO empleados (nombre, hotel, cargo, departamento, numero_asociado, enterpasssid, status)
+        VALUES ?
+        ON DUPLICATE KEY UPDATE
+          nombre=VALUES(nombre),
+          hotel=VALUES(hotel),
+          cargo=VALUES(cargo),
+          departamento=VALUES(departamento),
+          enterpasssid=VALUES(enterpasssid),
+          status=VALUES(status)
+      `;
+    } else {
+      sql = `
+        INSERT INTO empleados (nombre, hotel, cargo, departamento, numero_asociado, enterpasssid, status)
+        VALUES ?
+      `;
+    }
+
+    db.query(sql, [values], (err, result) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ error: 'error al presentar carga masiva', details: err.message });
+      }
+
+      res.json({
+        message: 'Carga masiva completada',
+        total: rows.length,
+        affectedRows: result.affectedRows
+      });
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error en carga masiva', details: err.message });
+  }
+};
+
