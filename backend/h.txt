@@ -1,9 +1,9 @@
-
 -- ----- EXTRAS -------- ---
--- para poder borrar directo de la base de datsos
-SET SQL_SAFE_UPDATES = 0;
-DELETE FROM prestamos ;
-SET SQL_SAFE_UPDATES = 1;
+-- para poder modificar la base de datsos
+SET SQL_SAFE_UPDATES = 0; -- quitar seguridad
+DELETE FROM historial;
+DROP TABLE historial;
+SET SQL_SAFE_UPDATES = 1; -- agregar seguridad nuevamente
 
 -- DROP DATABASE IF EXISTS marriott_presstt;
 CREATE DATABASE marriott_presstt;
@@ -29,6 +29,14 @@ CREATE TABLE empleados (
     numero_asociado VARCHAR(50) UNIQUE NOT NULL,
     enterpasssid VARCHAR(50)
 );
+-- === PARCHE DE EMPLEADOS.STATUS ===
+ALTER TABLE empleados ADD COLUMN status ENUM('activo','inactivo') NOT NULL DEFAULT 'activo';
+-- establecer activo por defecto a todos los que no tengan valor:
+UPDATE empleados SET status = 'activo' WHERE status IS NULL OR status NOT IN ('activo','inactivo');
+ALTER TABLE empleados
+ADD UNIQUE INDEX unq_numero_asociado (numero_asociado);
+SHOW INDEX FROM empleados;
+
 
 CREATE TABLE tipos_articulo (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -154,7 +162,7 @@ SELECT * FROM historial;
 SELECT * FROM impresiones_resguardos;
 SELECT * FROM prestamo_articulos;
 SELECT * FROM prestamos;
-SELECT * FROM resguardos;
+SELECT * FROM resguardo_snapshots;
 SELECT * FROM tipos_articulo;
 SELECT * FROM users;
 SELECT * FROM marcas;

@@ -89,7 +89,7 @@ exports.delete = (req, res) => {
   });
 };
 
-// Nueva función: carga masiva de empleados
+// Nueva función: carga masiva de empleados ------------------------------------------------>
 exports.bulkUpload = (req, res) => {
   const { rows } = req.body;
   const { mode } = req.query; // 'upsert' o 'insert'

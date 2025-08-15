@@ -16,7 +16,6 @@ const PRESETS = {
     endpoint: "http://localhost:3000/api/prestamos/bulk"
   }
 };
-
 /**
  * props:
  * - tipo: "empleados" | "articulos" | "prestamos"
@@ -49,11 +48,10 @@ export default function BulkUploader({ tipo, onDone }) {
         });
         setRows(normalized);
       },
-      error: (err) => setError("Error al leer CSV: " + err.message)
+      error: (err) => setError("Error al leer el CSV: " + err.message)
     });
   };
-
-  // Si quieres mandar en lotes (chunks), descomenta y usa sendInChunks(rows, 300)
+  // Si se quiere mandar en lotes (chunks), descomentar y usa sendInChunks(rows, 300)
   const sendInChunks = async (allRows, size = 300) => {
     const chunks = [];
     for (let i = 0; i < allRows.length; i += size) {
@@ -68,7 +66,7 @@ export default function BulkUploader({ tipo, onDone }) {
   };
 
   const enviar = async () => {
-    if (rows.length === 0) return setError("No hay filas para enviar.");
+    if (rows.length === 0) return setError("No hay filas para enviar");
     setError(""); setReport(null); setLoading(true);
     try {
       // 1) envío directo
@@ -91,23 +89,23 @@ export default function BulkUploader({ tipo, onDone }) {
   return (
     <div className="bg-white rounded-2xl border p-4 shadow">
       <div className="mb-1 text-sm text-gray-600">
-        <b>Plantilla esperada ({tipo}):</b> {cfg.columns.join(" , ")}
+        <b> Plantilla esperada ({tipo}):</b> {cfg.columns.join(" , ")}
       </div>
       <a
         className="text-rose-700 underline text-sm"
         href={`data:text/csv;charset=utf-8,${encodeURIComponent(templateCsv)}`}
         download={`plantilla_${tipo}.csv`}
       >
-        Descargar plantilla CSV
+        Descargar plantillas CSV
       </a>
-
+      
       <div className="mt-3">
         <input type="file" accept=".csv" onChange={handleFile} />
       </div>
 
       {rows.length > 0 && (
         <>
-          <div className="text-sm mt-2 text-gray-600">Filas cargadas: {rows.length}</div>
+          <div className="text-sm mt-2 text-gray-600">Filas cargadasa  {rows.length}</div>
           <div className="max-h-64 overflow-auto border rounded mt-2">
             <table className="min-w-full text-xs">
               <thead className="bg-gray-100 sticky top-0">
@@ -124,12 +122,11 @@ export default function BulkUploader({ tipo, onDone }) {
               </tbody>
             </table>
             {rows.length > 100 && (
-              <div className="text-center text-xs text-gray-500 py-2">… mostrando primeras 100 filas</div>
+              <div className="text-center text-xs text-gray-500 py-2">... mostrando las primeras 100 filas</div>
             )}
           </div>
         </>
       )}
-
       <div className="mt-3 flex gap-2 items-center">
         <button
           onClick={enviar}

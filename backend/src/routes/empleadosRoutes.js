@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const empleadosController = require('../controllers/empleadosController');
 
-// CRUD normales
+// CRUD normal
 router.get('/', empleadosController.getAll);
 router.post('/', empleadosController.create);
 router.put('/:id', empleadosController.update);
