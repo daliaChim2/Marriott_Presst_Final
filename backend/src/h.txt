@@ -13,7 +13,4 @@ git clone
                  |           |                  -
                                                 -
                                                 -
-
-- falta terminar insert masivo(tiene fallas)
-- crearle un acceso directo para mostrarlo en el navegador con un solo clic
 --- fecha de terminacion de horas Martes 19 a las 3pm ---
