@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import { FaLaptop, FaUser, FaKey, FaFileAlt, FaPowerOff, FaHome, FaCog } from "react-icons/fa";
+import { FaLaptop, FaUser, FaKey, FaFileAlt, FaPowerOff } from "react-icons/fa";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import logo from "../../assets/logo.png";
 import { Modal, Button } from "react-bootstrap";
-import { Menu, X, Users, Upload, Monitor, Cpu, FileText } from "lucide-react";
+import { Upload} from "lucide-react";
 
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(true);
@@ -47,6 +47,8 @@ export default function Sidebar() {
           <NavItem icon={<FaFileAlt />}label="" isOpen={isOpen} to="/resguardos" active={location.pathname.includes("resguardos")} />
           <NavItem icon={<Upload />} label="CME" isOpen={isOpen} to="/cargamasivaempleados"active={location.pathname.includes("cargamasivaempleados")} />
           <NavItem icon={<Upload/>} label="CMA" isOpen={isOpen} to="/cargamasivaarticulos" active={location.pathname.includes("cargamasivaarticulos")} />
+          <NavItem icon={<Upload />} label="CMP" isOpen={isOpen} to="/cargamasivaprestamos"active={location.pathname.includes("cargamasivaprestamos")} />
+
 
         </nav>
 

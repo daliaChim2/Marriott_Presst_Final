@@ -15,6 +15,7 @@ import PublicRoute from "./components/PublicRoute";
 
 import CargaMasivaEmpleados from "./Pages/CargaMasivaEmpleados";
 import CargaMasivaArticulos from "./Pages/CargaMasivaArticulos";
+import CargaMasivaPrestamos from "./Pages/CargaMasivaPrestamos";
 
 
 export default function App() {
@@ -41,6 +42,7 @@ export default function App() {
         <Route path="/equipos" element={<Equipos />} />
         <Route path="/cargamasivaarticulos" element={<CargaMasivaArticulos />} />
         <Route path="/sistemas" element={<Sistemas />} />
+        <Route path="/cargamasivaprestamos" element={<CargaMasivaPrestamos />} />
         <Route path="/resguardos" element={<Resguardos />} />
         <Route path="/prueba-conexion" element={<PruebaConexion />} />
       </Route>
