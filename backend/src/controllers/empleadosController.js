@@ -27,7 +27,6 @@ exports.create = (req, res) => {
     }
   );
 };
-
 // Editar empleado (impide pasar a inactivo si tiene préstamos activos)
 exports.update = (req, res) => {
   const { nombre, hotel, cergo, departamento, numero_asociado, enterpasssid, status } = req.body;
@@ -66,7 +65,7 @@ exports.update = (req, res) => {
     return continuarActualizacion();
   }
 
-  // Verificar préstamos activos antes de inactivar
+  // Verificar prestamos antes de finalizar()
   db.query(
     `SELECT COUNT(*) AS total FROM prestamos WHERE empleado_id=? AND estado='activo'`,
     [id],
@@ -89,13 +88,13 @@ exports.delete = (req, res) => {
   });
 };
 
-// Nueva función: carga masiva de empleados ------------------------------------------------>
+// Nueva función: carga masiva de empleados ----------1-------------------------------------->
 exports.bulkUpload = (req, res) => {
   const { rows } = req.body;
   const { mode } = req.query; // 'upsert' o 'insert'
 
   if (!rows || !Array.isArray(rows) || rows.length === 0) {
-    return res.status(400).json({ error: 'No hay datos para insertar.' });
+    return res.status(400).json({ error : 'No hay datos para borrar. ' });
   }
 
   // Normalizar status
@@ -104,7 +103,7 @@ exports.bulkUpload = (req, res) => {
   };
 
   try {
-    // Construir consultas en lotes...
+    // Contruir consultas en lotes  
     const values = rows.map(emp => [
       emp.nombre?.trim() || '',
       emp.hotel?.trim() || '',
@@ -139,11 +138,11 @@ exports.bulkUpload = (req, res) => {
     db.query(sql, [values], (err, result) => {
       if (err) {
         console.error(err);
-        return res.status(500).json({ error: 'error al presentar carga masiva', details: err.message });
+        return res.status(500).json({ error: 'error al presentar la carga masiva', details: err.message });
       }
 
       res.json({
-        message: 'Carga masiva completada',
+        message: 'Carga masiva completa',
         total: rows.length,
         affectedRows: result.affectedRows
       });
@@ -151,7 +150,7 @@ exports.bulkUpload = (req, res) => {
 
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Error en carga masiva', details: err.message });
+    res.status(500).json({ error: 'Error ', details: err.message });
   }
 };
 

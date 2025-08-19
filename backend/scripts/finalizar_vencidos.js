@@ -49,7 +49,7 @@ db.query(`
             Promise.all(updates)
               .then(() => {
                 procesados++;
-                console.log(`✅ Préstamo ${folio} finalizado automáticamente (${id})`);
+                console.log(` Préstamo ${folio} finalizado automáticamente (${id})`);
                 if (procesados === prestamos.length) {
                   console.log('--- Proceso completado. ---');
                   process.exit(0);

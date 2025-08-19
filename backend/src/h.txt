@@ -4,17 +4,4 @@ git push
 
 git clone 
   
-  --------------------------------------------- -
-         |                          |           -
-                                                -
-  AGREGAR CAMBIOS ING. MIGUEL ANTES DE CAMBIAR  -
-            ALGO, NO HACER PUSH!!!              -
-                                                -
-                 |           |                  -
-                                                -
-                                                -
-
-- falta terminar insert masivo(tiene fallas)
-- crearle un acceso directo para mostrarlo en el navegador con un solo clic
-- ajustar el auto-finalizado de articulos y la liberacion automatica de articulo(agregar noti en el front)
---- fecha de terminacion de horas Martes 19 a las 3pm ---
+ 

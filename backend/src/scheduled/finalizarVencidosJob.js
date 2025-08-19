@@ -1,4 +1,7 @@
-// backend/src/scheduled/finalizarVencidosJob.js
+// backend/src/scheduled/finalizarVencidosJob.js 
+
+// E L I M I N A R
+
 require('dotenv').config();
 const cron = require('node-cron');
 const db = require('../config/db');
@@ -40,7 +43,7 @@ function finalizarVencidos() {
 
               Promise.all(updates)
                 .then(() => {
-                  console.log(`[CRON] ✅ Préstamo ${folio} finalizado automáticamente (${id})`);
+                  console.log(`[CRON] Préstamo ${folio} finalizado automáticamente (${id})`);
                 })
                 .catch(e => console.error(`[CRON] Error liberando artículos de préstamo ${folio}:`, e));
             }

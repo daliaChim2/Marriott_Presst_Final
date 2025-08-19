@@ -6,7 +6,6 @@ exports.getAll = (req, res) => {
     res.json(results);
   });
 };
-
 exports.create = (req, res) => {
   const { nombre } = req.body;
   if (!nombre) return res.status(400).json({ error: 'Falta el nombre de la marca' });

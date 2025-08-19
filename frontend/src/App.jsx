@@ -13,6 +13,10 @@ import Register from "./Pages/Auth/Register";
 import PrivateRoute from "./components/PrivateRoute";
 import PublicRoute from "./components/PublicRoute"; 
 
+import CargaMasivaEmpleados from "./Pages/CargaMasivaEmpleados";
+import CargaMasivaArticulos from "./Pages/CargaMasivaArticulos";
+
+
 export default function App() {
   return (
     <Routes>
@@ -33,7 +37,9 @@ export default function App() {
         <Route path="/" element={<Colaboradores />} />
         {/* <Route path="/dashboard" element={<Dashboard />} /> */}
         <Route path="/colaboradores" element={<Colaboradores />} />
+        <Route path="/cargamasivaempleados" element={<CargaMasivaEmpleados />} /> 
         <Route path="/equipos" element={<Equipos />} />
+        <Route path="/cargamasivaarticulos" element={<CargaMasivaArticulos />} />
         <Route path="/sistemas" element={<Sistemas />} />
         <Route path="/resguardos" element={<Resguardos />} />
         <Route path="/prueba-conexion" element={<PruebaConexion />} />

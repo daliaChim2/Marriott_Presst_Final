@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Papa from "papaparse";
 import axios from "axios";
 
@@ -9,13 +9,18 @@ const PRESETS = {
   },
   articulos: {
     columns: ["id","tipo_nombre","marca","modelo","numero_serie","estado","hotel","costo","descripcion","empleado_numero_asociado"],
-    endpoint: "http://localhost:3000/api/articulos/bulk?mode=upsert"
+    endpoint: "http://localhost:3000/api/articulos/bulk?mode=upsert",
+    validValues: {
+      estado: ["disponible","ocupado","mantenimiento","fuera de servicio"],
+      hotel: ["JW Marriott", "Marriott Resort"]
+    }
   },
   prestamos: {
     columns: ["numero_asociado","usuario_entrega","fecha_prestamo","periodo","fecha_vencimiento","comentarios","articulos_ids"],
     endpoint: "http://localhost:3000/api/prestamos/bulk"
   }
 };
+
 /**
  * props:
  * - tipo: "empleados" | "articulos" | "prestamos"
@@ -27,57 +32,56 @@ export default function BulkUploader({ tipo, onDone }) {
   const [report, setReport] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [validationErrors, setValidationErrors] = useState([]);
 
   const templateCsv = useMemo(() => cfg.columns.join(",") + "\n", [cfg.columns]);
 
   const handleFile = e => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setError(""); setReport(null); setRows([]);
+    setError(""); setReport(null); setRows([]); setValidationErrors([]);
 
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
       complete: (res) => {
-        const normalized = res.data.map(obj => {
+        const normalized = res.data.map((obj, idx) => {
           const o = {};
           for (const k of Object.keys(obj)) {
             o[k.trim()] = typeof obj[k] === "string" ? obj[k].trim() : obj[k];
           }
+          o._rowIndex = idx + 2; // fila en CSV para errores
           return o;
         });
+
+        // Validar si es tipo "articulos"
+        if (tipo === "articulos") {
+          const errors = [];
+          normalized.forEach(r => {
+            if (!r.numero_serie) errors.push(`Fila ${r._rowIndex}: "numero_serie" es obligatorio`);
+            if (!r.tipo_nombre) errors.push(`Fila ${r._rowIndex}: "tipo_nombre" es obligatorio`);
+            if (cfg.validValues.estado && !cfg.validValues.estado.includes(r.estado)) 
+              errors.push(`Fila ${r._rowIndex}: "estado" inválido (${r.estado})`);
+            if (cfg.validValues.hotel && !cfg.validValues.hotel.includes(r.hotel)) 
+              errors.push(`Fila ${r._rowIndex}: "hotel" inválido (${r.hotel})`);
+          });
+          setValidationErrors(errors);
+        }
+
         setRows(normalized);
       },
       error: (err) => setError("Error al leer el CSV: " + err.message)
     });
   };
-  // Si se quiere mandar en lotes (chunks), descomentar y usa sendInChunks(rows, 300)
-  const sendInChunks = async (allRows, size = 300) => {
-    const chunks = [];
-    for (let i = 0; i < allRows.length; i += size) {
-      chunks.push(allRows.slice(i, i + size));
-    }
-    const results = [];
-    for (let i = 0; i < chunks.length; i++) {
-      const { data } = await axios.post(cfg.endpoint, { rows: chunks[i] });
-      results.push(data);
-    }
-    return results;
-  };
 
   const enviar = async () => {
     if (rows.length === 0) return setError("No hay filas para enviar");
+    if (validationErrors.length > 0) return setError("Corrige los errores antes de enviar");
     setError(""); setReport(null); setLoading(true);
     try {
-      // 1) envío directo
       const { data } = await axios.post(cfg.endpoint, { rows });
       setReport(data);
       onDone?.(data);
-
-      // 2) o por lotes:
-      // const data = await sendInChunks(rows, 300);
-      // setReport({ message: "Carga por lotes completa", parts: data });
-      // onDone?.(data);
     } catch (e) {
       setError(e?.response?.data?.error || "Error al enviar los datos");
       setReport(e?.response?.data || null);
@@ -96,16 +100,25 @@ export default function BulkUploader({ tipo, onDone }) {
         href={`data:text/csv;charset=utf-8,${encodeURIComponent(templateCsv)}`}
         download={`plantilla_${tipo}.csv`}
       >
-        Descargar plantillas CSV
+        Descargar plantilla CSV
       </a>
       
       <div className="mt-3">
         <input type="file" accept=".csv" onChange={handleFile} />
       </div>
 
+      {validationErrors.length > 0 && (
+        <div className="mt-2 p-2 bg-red-100 border border-red-300 text-red-700 text-xs rounded">
+          <b>Errores de validación:</b>
+          <ul className="list-disc pl-4">
+            {validationErrors.map((err,i) => <li key={i}>{err}</li>)}
+          </ul>
+        </div>
+      )}
+
       {rows.length > 0 && (
         <>
-          <div className="text-sm mt-2 text-gray-600">Filas cargadasa  {rows.length}</div>
+          <div className="text-sm mt-2 text-gray-600">Filas cargadas: {rows.length}</div>
           <div className="max-h-64 overflow-auto border rounded mt-2">
             <table className="min-w-full text-xs">
               <thead className="bg-gray-100 sticky top-0">
@@ -127,11 +140,12 @@ export default function BulkUploader({ tipo, onDone }) {
           </div>
         </>
       )}
+
       <div className="mt-3 flex gap-2 items-center">
         <button
           onClick={enviar}
           className="bg-rose-900 hover:bg-rose-500 text-white px-4 py-2 rounded-2xl shadow disabled:opacity-50"
-          disabled={loading || rows.length === 0}
+          disabled={loading || rows.length === 0 || validationErrors.length > 0}
         >
           {loading ? "Enviando…" : "Cargar en bloque"}
         </button>

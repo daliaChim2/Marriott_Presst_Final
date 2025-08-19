@@ -3,6 +3,7 @@ import { FaLaptop, FaUser, FaKey, FaFileAlt, FaPowerOff, FaHome, FaCog } from "r
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import logo from "../../assets/logo.png";
 import { Modal, Button } from "react-bootstrap";
+import { Menu, X, Users, Upload, Monitor, Cpu, FileText } from "lucide-react";
 
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(true);
@@ -40,10 +41,13 @@ export default function Sidebar() {
         {/* NAVEGACIÓN */}
         <nav className="flex flex-col py-4 px-4 space-y-2">
          
-          <NavItem icon={<FaUser />}  isOpen={isOpen} to="/colaboradores" active={location.pathname.includes("colaboradores")} />
-          <NavItem icon={<FaLaptop />}  isOpen={isOpen} to="/equipos" active={location.pathname.includes("equipos")} />
-          <NavItem icon={<FaKey />}  isOpen={isOpen} to="/sistemas" active={location.pathname.includes("sistemas")} />
-          <NavItem icon={<FaFileAlt />}  isOpen={isOpen} to="/resguardos" active={location.pathname.includes("resguardos")} />
+          <NavItem icon={<FaUser />} label="" isOpen={isOpen} to="/colaboradores" active={location.pathname.includes("colaboradores")} />
+          <NavItem icon={<FaLaptop />}label="" isOpen={isOpen} to="/equipos" active={location.pathname.includes("equipos")} />
+          <NavItem icon={<FaKey />}label="" isOpen={isOpen} to="/sistemas" active={location.pathname.includes("sistemas")} />
+          <NavItem icon={<FaFileAlt />}label="" isOpen={isOpen} to="/resguardos" active={location.pathname.includes("resguardos")} />
+          <NavItem icon={<Upload />} label="CME" isOpen={isOpen} to="/cargamasivaempleados"active={location.pathname.includes("cargamasivaempleados")} />
+          <NavItem icon={<Upload/>} label="CMA" isOpen={isOpen} to="/cargamasivaarticulos" active={location.pathname.includes("cargamasivaarticulos")} />
+
         </nav>
 
         {/* CERRAR SESIÓN */}
